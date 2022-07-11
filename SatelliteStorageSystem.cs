@@ -116,6 +116,7 @@ namespace SatelliteStorage
             .AddIngredient(ItemID.IceBlock, 50)
             .Register();
 
+            /*
             Recipe.Create(ModContent.ItemType<Items.SputnikItem>(), 1)
             .AddIngredient(ItemID.DirtBlock, 1)
             .Register();
@@ -123,6 +124,7 @@ namespace SatelliteStorage
             Recipe.Create(ModContent.ItemType<Items.DriveChestItem>(), 1)
             .AddIngredient(ItemID.DirtBlock, 1)
             .Register();
+            */
         }
 
         public override void PostUpdateWorld()

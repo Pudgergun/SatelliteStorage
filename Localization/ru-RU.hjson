@@ -53,6 +53,7 @@ Mods: {
 
 		UITitles: {
 			DriveChest: Терминал
+			Sputnik: Спутник
 			DriveChestSearch: Поиск
 			DriveChestRecipes: Рецепты
 			DriveChestCraft: Создание

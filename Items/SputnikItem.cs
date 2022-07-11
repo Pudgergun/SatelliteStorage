@@ -14,8 +14,6 @@ namespace SatelliteStorage.Items
 		{
 
 			//Tooltip.SetDefault("Quartz Shard"); // The (English) text shown below your item's name
-			DisplayName.SetDefault("Sputnik");
-
 
 			CreativeItemSacrificesCatalog.Instance.SacrificeCountNeededByItemId[Type] = 1; // How many items are needed in order to research duplication of this item in Journey mode. See https://terraria.gamepedia.com/Journey_Mode/Research_list for a list of commonly used research amounts depending on item type.
 		}
