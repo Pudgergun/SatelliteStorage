@@ -558,11 +558,11 @@ namespace SatelliteStorage
                             Main.mouseItem = takeItem;
                             if (clickType == 1)
                             {
-                                SoundEngine.PlaySound(12);
+                                SoundEngine.PlaySound(SoundID.SoundByIndex[12]);
                             }
                             else
                             {
-                                SoundEngine.PlaySound(7);
+                                SoundEngine.PlaySound(SoundID.SoundByIndex[7]);
                             }
                         }
 
@@ -578,7 +578,7 @@ namespace SatelliteStorage
                         {
                             mouseItem.TurnToAir();
                             Main.mouseItem.TurnToAir();
-                            SoundEngine.PlaySound(7);
+                            SoundEngine.PlaySound(SoundID.SoundByIndex[7]);
                         }
 
                         AddDriveChestItemSended = false;
@@ -630,7 +630,7 @@ namespace SatelliteStorage
                             if (player.inventory[slot].stack <= 0) player.inventory[slot].TurnToAir();
                         }
 
-                        SoundEngine.PlaySound(7);
+                        SoundEngine.PlaySound(SoundID.SoundByIndex[7]);
                         DriveChestSystem.checkRecipesRefresh = false;
 
                         break;

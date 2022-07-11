@@ -53,6 +53,7 @@ Mods: {
 
         UITitles: {
             DriveChest: Network Terminal
+            Sputnik: Sputnik
             DriveChestSearch: Search
             DriveChestRecipes: Recipes
             DriveChestCraft: Crafting

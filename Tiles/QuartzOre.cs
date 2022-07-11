@@ -29,8 +29,9 @@ namespace SatelliteStorage.Tiles
 
 			DustType = 84;
 			ItemDrop = ModContent.ItemType<Items.QuartzShard>();
-			SoundType = SoundID.Tink;
-			SoundStyle = 1;
+
+			HitSound = SoundID.Tink;
+			
 			// mineResist = 4f;
 			// minPick = 200;
 		}

@@ -105,15 +105,23 @@ namespace SatelliteStorage
 
         public override void AddRecipes()
         {
-            Mod.CreateRecipe(ItemID.MagicMirror, 1)
+            Recipe.Create(ItemID.MagicMirror, 1)
             .AddIngredient(ItemID.Glass, 250)
             .AddIngredient(ItemID.FallenStar, 50)
             .AddIngredient(ItemID.ReflectiveDye, 1)
             .Register();
 
-            Mod.CreateRecipe(ItemID.IceMirror, 1)
+            Recipe.Create(ItemID.IceMirror, 1)
             .AddIngredient(ItemID.MagicMirror, 1)
             .AddIngredient(ItemID.IceBlock, 50)
+            .Register();
+
+            Recipe.Create(ModContent.ItemType<Items.SputnikItem>(), 1)
+            .AddIngredient(ItemID.DirtBlock, 1)
+            .Register();
+
+            Recipe.Create(ModContent.ItemType<Items.DriveChestItem>(), 1)
+            .AddIngredient(ItemID.DirtBlock, 1)
             .Register();
         }
 

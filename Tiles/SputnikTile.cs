@@ -33,10 +33,10 @@ namespace SatelliteStorage.Tiles
 			DustType = DustID.Firefly;
 
 			// Names
-			ContainerName.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.UITitles.DriveChest"));
+			ContainerName.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.UITitles.Sputnik"));
 
 			ModTranslation name = CreateMapEntryName();
-			name.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.UITitles.DriveChest"));
+			name.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.UITitles.Sputnik"));
 			AddMapEntry(new Color(108, 65, 138), name, MapName);
 			
 			//name = CreateMapEntryName(Name + "_Locked"); // With multiple map entries, you need unique translation keys.
