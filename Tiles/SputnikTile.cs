@@ -110,7 +110,7 @@ namespace SatelliteStorage.Tiles
 			Player player = Main.LocalPlayer;
 
 
-			player.cursorItemIconText = Language.GetTextValue("Mods.SatelliteStorage.UITitles.DriveChest");
+			player.cursorItemIconText = Language.GetTextValue("Mods.SatelliteStorage.UITitles.SputnikItem");
 
 			player.noThrow = 2;
 			//player.cursorItemIconEnabled = true;

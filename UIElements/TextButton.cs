@@ -37,7 +37,7 @@ namespace SatelliteStorage.UIElements
             OnMouseOver += (UIMouseEvent evt, UIElement listeningElement) =>
             {
                 if (mouseOver) return;
-                SoundEngine.PlaySound(SoundID.SoundByIndex[12]);
+                SoundEngine.PlaySound(SoundID.MenuTick);
                 mouseOver = true;
             };
 

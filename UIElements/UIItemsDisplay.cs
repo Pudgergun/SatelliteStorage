@@ -140,7 +140,7 @@ namespace SatelliteStorage.UIElements
 
 					mouseItem.TurnToAir();
 					Main.mouseItem.TurnToAir();
-					SoundEngine.PlaySound(SoundID.SoundByIndex[7]);
+					SoundEngine.PlaySound(SoundID.Grab);
 				}
 
 				if (Main.netMode == NetmodeID.MultiplayerClient)
@@ -292,11 +292,11 @@ namespace SatelliteStorage.UIElements
 
 				if (clickType == 1)
 				{
-					SoundEngine.PlaySound(SoundID.SoundByIndex[12]);
+					SoundEngine.PlaySound(SoundID.MenuTick);
 				}
 				else
 				{
-					SoundEngine.PlaySound(SoundID.SoundByIndex[7]);
+					SoundEngine.PlaySound(SoundID.Grab);
 				}
 			}
 
@@ -490,17 +490,17 @@ namespace SatelliteStorage.UIElements
 			if (_searchBar.HasContents)
 			{
 				_searchBar.SetContents(null, forced: true);
-				SoundEngine.PlaySound(SoundID.SoundByIndex[11]);
+				SoundEngine.PlaySound(SoundID.MenuTick);
 			}
 			else
 			{
-				SoundEngine.PlaySound(SoundID.SoundByIndex[12]);
+				SoundEngine.PlaySound(SoundID.MenuTick);
 			}
 		}
 
 		private void searchCancelButton_OnMouseOver(UIMouseEvent evt, UIElement listeningElement)
 		{
-			SoundEngine.PlaySound(SoundID.SoundByIndex[12]);
+			SoundEngine.PlaySound(SoundID.MenuTick);
 		}
 
 		private void OnCancledInput()

@@ -105,7 +105,7 @@ namespace SatelliteStorage.UI
 			{
 				if (!ButtonHovered[ID])
 				{
-					SoundEngine.PlaySound(SoundID.SoundByIndex[12]);
+					SoundEngine.PlaySound(SoundID.MenuTick);
 				}
 				ButtonHovered[ID] = true;
 				ButtonScale[ID] += 0.05f;
@@ -427,7 +427,7 @@ namespace SatelliteStorage.UI
 			{
 				currentRecipe = recipe;
 				craftRecipe.SetRecipe(recipe);
-				SoundEngine.PlaySound(SoundID.SoundByIndex[12]);
+				SoundEngine.PlaySound(SoundID.MenuTick);
 			};
 			
 			OnMouseDown += (UIMouseEvent evt, UIElement listeningElement) =>
@@ -522,7 +522,7 @@ namespace SatelliteStorage.UI
 					Main.mouseItem.stack += recipe.createItem.stack;
 				}
 
-				SoundEngine.PlaySound(SoundID.SoundByIndex[7]);
+				SoundEngine.PlaySound(SoundID.Grab);
 				DriveChestSystem.checkRecipesRefresh = false;
 			}
 
@@ -593,7 +593,7 @@ namespace SatelliteStorage.UI
 
 			if (itemAdded)
 			{
-				SoundEngine.PlaySound(SoundID.SoundByIndex[7]);
+				SoundEngine.PlaySound(SoundID.Grab);
 				if (Main.netMode == NetmodeID.SinglePlayer) ReloadItems();
 			}
 		}
@@ -618,7 +618,7 @@ namespace SatelliteStorage.UI
 
 				mouseItem.TurnToAir();
 				Main.mouseItem.TurnToAir();
-				SoundEngine.PlaySound(SoundID.SoundByIndex[7]);
+				SoundEngine.PlaySound(SoundID.Grab);
 			}
 
 			if (Main.netMode == NetmodeID.MultiplayerClient)

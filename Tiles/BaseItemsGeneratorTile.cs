@@ -16,6 +16,7 @@ namespace SatelliteStorage.Tiles
     {
 		public byte generatorType;
 		public int itemDrop;
+		public string item_name;
 
 		public override void SetStaticDefaults()
 		{
@@ -27,10 +28,10 @@ namespace SatelliteStorage.Tiles
 			TileID.Sets.DisableSmartCursor[Type] = true;
 
 			// Names
-			ContainerName.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.UITitles.DriveChest"));
+			ContainerName.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.ItemName." + item_name + "Item"));
 
 			ModTranslation name = CreateMapEntryName();
-			name.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.UITitles.DriveChest"));
+			name.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.ItemName." + item_name+ "Item"));
 			AddMapEntry(new Color(108, 65, 138), name, MapName);
 
 			// Placement
@@ -66,7 +67,7 @@ namespace SatelliteStorage.Tiles
 
 		public static string MapName(string name, int i, int j)
 		{
-			return Language.GetTextValue("Mods.SatelliteStorage.UITitles.DriveChest");
+			return Language.GetTextValue("Mods.SatelliteStorage.ItemName.BaseItemsGeneratorItem");
 		}
 
 		public override void KillMultiTile(int i, int j, int frameX, int frameY)
@@ -85,7 +86,7 @@ namespace SatelliteStorage.Tiles
 			Player player = Main.LocalPlayer;
 
 
-			player.cursorItemIconText = Language.GetTextValue("Mods.SatelliteStorage.UITitles.DriveChest");
+			player.cursorItemIconText = Language.GetTextValue("Mods.SatelliteStorage.ItemName." + item_name + "Item");
 
 			player.noThrow = 2;
 			
@@ -125,7 +126,7 @@ namespace SatelliteStorage.Tiles
             {
 				Player player = Main.LocalPlayer;
 				ModPacket packet = SatelliteStorage.instance.GetPacket();
-				packet.Write((byte)SatelliteStorage.MessageType.AddDriveChestItem);
+				packet.Write((byte)SatelliteStorage.MessageType.ChangeGeneratorState);
 				packet.Write((byte)player.whoAmI);
 				
 				packet.Write((byte)generatorType);
