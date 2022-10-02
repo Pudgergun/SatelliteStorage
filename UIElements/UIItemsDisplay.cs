@@ -115,7 +115,7 @@ namespace SatelliteStorage.UIElements
 			};
 			List<IItemEntryFilter> list2 = new List<IItemEntryFilter>();
 			list2.AddRange(list);
-			list2.Add(new ItemFilters.MiscFallback(list));
+			//list2.Add(new ItemFilters.MiscFallback(list));
 			_filterer.AddFilters(list2);
 			_filterer.SetSearchFilterObject(new ItemFilters.BySearch());
 			_sorter = new EntrySorter<int, ICreativeItemSortStep>();
