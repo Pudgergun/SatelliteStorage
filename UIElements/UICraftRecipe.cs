@@ -51,7 +51,6 @@ namespace SatelliteStorage.UIElements
 		public void RebuildPage()
 		{
 			UpdateContents();
-			//BuildPage();
 		}
 
 
@@ -76,7 +75,6 @@ namespace SatelliteStorage.UIElements
 			_containerSacrifice = uIElement2;
 
 			BuildInfinitesMenuContents(uIElement);
-			//BuildSacrificeMenuContents(uIElement2);
 
 			UpdateContents();
 			base.OnUpdate += UICreativeInfiniteItemsDisplay_OnUpdate;
@@ -109,13 +107,11 @@ namespace SatelliteStorage.UIElements
 
 			item.OnMouseDown += (UIMouseEvent evt, UIElement listeningElement) =>
 			{
-				//TakeItem(evt, listeningElement, 0);
 				return;
 			};
 
 			item.OnRightMouseDown += (UIMouseEvent evt, UIElement listeningElement) =>
 			{
-				//TakeItem(evt, listeningElement, 1);
 				return;
 			};
 

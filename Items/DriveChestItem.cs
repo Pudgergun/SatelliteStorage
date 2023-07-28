@@ -29,7 +29,6 @@ namespace SatelliteStorage.Items
 			Item.createTile = ModContent.TileType<Tiles.DriveChestTile>();
 		}
 
-		// Please see Content/ExampleRecipes.cs for a detailed explanation of recipe creation.
 		public override void AddRecipes()
 		{
 			CreateRecipe()

@@ -4,7 +4,7 @@ The storage has a fancy interface with the item filters, searchbar, recipes and 
 This mod also adds item generators that will be producing random useful items right into your Network Terminal. 
 
 -=-=-=-=-=-Content List-=-=-=-=-=-
-20 new items
+22 new items
 10 types of generators
 2 new recipes
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -19,7 +19,7 @@ Sprites Author: Nicenikc (nicenikc#6293)
 Также вы сможете создать генераторы предметов, которые будут с течением времени генерировать случайные предметы из списка в хранилище.
 
 -=-=-=-=-=- Весь контент-=-=-=-=-=-
-20 предметов
+22 предмета
 10 генераторов
 2 рецепта
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

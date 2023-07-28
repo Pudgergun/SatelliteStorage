@@ -21,7 +21,7 @@ namespace SatelliteStorage.Global
             {
                 if (type == TileID.Platinum || type == TileID.Gold)
                 {
-                    if (new Random().Next(0, 100) > 70)
+                    if (new Random().Next(0, 100) > 100)
                     {
                         Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 32, 32, ModContent.ItemType<Items.QuartzShard>());
                         return false;

@@ -15,7 +15,7 @@ namespace SatelliteStorage.Items
             base.SetGeneratorDefaults();
             Item.value = 500;
             Item.createTile = ModContent.TileType<Tiles.HellstoneGeneratorTile>();
-            Item.rare = 2;
+            Item.rare = ItemRarityID.Green;
             generatorType = (byte)SatelliteStorage.GeneratorTypes.HellstoneGenerator;
         }
 
@@ -36,7 +36,7 @@ namespace SatelliteStorage.Items
             base.SetGeneratorDefaults();
             Item.value = 500;
             Item.createTile = ModContent.TileType<Tiles.MeteoriteGeneratorTile>();
-            Item.rare = 1;
+            Item.rare = ItemRarityID.Blue;
             generatorType = (byte)SatelliteStorage.GeneratorTypes.MeteoriteGenerator;
         }
 
@@ -57,7 +57,7 @@ namespace SatelliteStorage.Items
             base.SetGeneratorDefaults();
             Item.value = 500;
             Item.createTile = ModContent.TileType<Tiles.ShroomiteGeneratorTile>();
-            Item.rare = 7;
+            Item.rare = ItemRarityID.Lime;
             generatorType = (byte)SatelliteStorage.GeneratorTypes.ShroomiteGenerator;
         }
 
@@ -78,7 +78,7 @@ namespace SatelliteStorage.Items
             base.SetGeneratorDefaults();
             Item.value = 500;
             Item.createTile = ModContent.TileType<Tiles.SpectreGeneratorTile>();
-            Item.rare = 7;
+            Item.rare = ItemRarityID.Lime;
             generatorType = (byte)SatelliteStorage.GeneratorTypes.SpectreGenerator;
         }
 
@@ -99,7 +99,7 @@ namespace SatelliteStorage.Items
             base.SetGeneratorDefaults();
             Item.value = 500;
             Item.createTile = ModContent.TileType<Tiles.LuminiteGeneratorTile>();
-            Item.rare = 10;
+            Item.rare = ItemRarityID.Red;
             generatorType = (byte)SatelliteStorage.GeneratorTypes.LuminiteGenerator;
         }
 
@@ -120,7 +120,7 @@ namespace SatelliteStorage.Items
             base.SetGeneratorDefaults();
             Item.value = 500;
             Item.createTile = ModContent.TileType<Tiles.ChlorophyteGeneratorTile>();
-            Item.rare = 7;
+            Item.rare = ItemRarityID.Lime;
             generatorType = (byte)SatelliteStorage.GeneratorTypes.ChlorophyteGenerator;
         }
 
@@ -141,7 +141,7 @@ namespace SatelliteStorage.Items
             base.SetGeneratorDefaults();
             Item.value = 500;
             Item.createTile = ModContent.TileType<Tiles.HallowedGeneratorTile>();
-            Item.rare = 4;
+            Item.rare = ItemRarityID.LightRed;
             generatorType = (byte)SatelliteStorage.GeneratorTypes.HallowedGenerator;
         }
 
@@ -162,7 +162,7 @@ namespace SatelliteStorage.Items
             base.SetGeneratorDefaults();
             Item.value = 500;
             Item.createTile = ModContent.TileType<Tiles.SoulGeneratorTile>();
-            Item.rare = 3;
+            Item.rare = ItemRarityID.Orange;
             generatorType = (byte)SatelliteStorage.GeneratorTypes.SoulGenerator;
         }
 
@@ -183,7 +183,7 @@ namespace SatelliteStorage.Items
             base.SetGeneratorDefaults();
             Item.value = 500;
             Item.createTile = ModContent.TileType<Tiles.PowerGeneratorTile>();
-            Item.rare = 5;
+            Item.rare = ItemRarityID.Pink;
             generatorType = (byte)SatelliteStorage.GeneratorTypes.PowerGenerator;
         }
 

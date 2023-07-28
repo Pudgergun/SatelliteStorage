@@ -17,40 +17,25 @@ namespace SatelliteStorage.Tiles
     {
 		public override void SetStaticDefaults()
 		{
-			// Properties
-			//Main.tileSpelunker[Type] = true;
-			//Main.tileContainer[Type] = true;
 			Main.tileLighted[Type] = true;
-			//Main.tileShine2[Type] = true;
-			//Main.tileShine[Type] = 1200;
 			Main.tileFrameImportant[Type] = true;
 			Main.tileNoAttach[Type] = true;
 			Main.tileOreFinderPriority[Type] = 500;
-			//TileID.Sets.HasOutlines[Type] = true;
-			//TileID.Sets.BasicChest[Type] = true;
 			TileID.Sets.DisableSmartCursor[Type] = true;
 
 			DustType = DustID.Firefly;
 
-			// Names
 			ContainerName.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.UITitles.Sputnik"));
 
 			ModTranslation name = CreateMapEntryName();
 			name.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.UITitles.Sputnik"));
 			AddMapEntry(new Color(108, 65, 138), name, MapName);
 			
-			//name = CreateMapEntryName(Name + "_Locked"); // With multiple map entries, you need unique translation keys.
-			//name.SetDefault("Locked Example Chest");
-			//AddMapEntry(new Color(0, 141, 63), name, MapName);
-
-			// Placement
 			TileObjectData.newTile.CopyFrom(TileObjectData.Style6x3);
 			TileObjectData.newTile.Origin = new Point16(2, 1);
 			TileObjectData.newTile.CoordinateHeights = new int[3] { 16, 16, 16 };
 			TileObjectData.newTile.CoordinateWidth = 16;
 
-			//TileObjectData.newTile.CoordinatePadding = 2;
-			//TileObjectData.newTile.AnchorInvalidTiles = new int[] { TileID.MagicalIceBlock };
 			TileObjectData.newTile.StyleHorizontal = true;
 			TileObjectData.newTile.LavaDeath = false;
 
@@ -61,7 +46,7 @@ namespace SatelliteStorage.Tiles
 
         public override bool CanPlace(int i, int j)
         {
-			if (!Main.LocalPlayer.ZoneNormalSpace) return false;
+			if (Main.LocalPlayer.position.Y > Main.worldSurface * 4.2) return false;
 			if (DriveSystem.DriveChestSystem.isSputnikPlaced) return false;
             return base.CanPlace(i, j);
         }
@@ -113,7 +98,6 @@ namespace SatelliteStorage.Tiles
 			player.cursorItemIconText = Language.GetTextValue("Mods.SatelliteStorage.UITitles.SputnikItem");
 
 			player.noThrow = 2;
-			//player.cursorItemIconEnabled = true;
 		}
 
 		public override void MouseOverFar(int i, int j)

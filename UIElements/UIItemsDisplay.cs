@@ -16,6 +16,7 @@ using SatelliteStorage.DriveSystem;
 using Terraria.GameContent.UI.Elements;
 using Terraria;
 using Terraria.ModLoader;
+using Microsoft.Xna.Framework.Input;
 
 namespace SatelliteStorage.UIElements
 {
@@ -27,76 +28,33 @@ namespace SatelliteStorage.UIElements
 			InfiniteItemsResearch
 		}
 
+		public Action onFiltersChanged = null;
 		private List<int> _itemIdsAvailableTotal;
-
 		private List<int> _itemIdsAvailableToShow;
-
 		private CreativeUnlocksTracker _lastTrackerCheckedForEdits;
-
 		private int _lastCheckedVersionForEdits = -1;
-
 		private UISearchBar _searchBar;
-
 		private UIPanel _searchBoxPanel;
-
-		private UIState _parentUIState;
-
 		private string _searchString;
-
 		private DynamicItemCollection _itemGrid;
-
-		private EntryFilterer<Item, IItemEntryFilter> _filterer;
-
+		public EntryFilterer<Item, IItemEntryFilter> _filterer;
 		private EntrySorter<int, ICreativeItemSortStep> _sorter;
-
 		private UIElement _containerInfinites;
-
 		private UIElement _containerSacrifice;
-
 		private bool _showSacrificesInsteadOfInfinites;
-
 		public const string SnapPointName_SacrificeSlot = "CreativeSacrificeSlot";
-
 		public const string SnapPointName_SacrificeConfirmButton = "CreativeSacrificeConfirm";
-
 		public const string SnapPointName_InfinitesFilter = "CreativeInfinitesFilter";
-
 		public const string SnapPointName_InfinitesSearch = "CreativeInfinitesSearch";
-
 		public const string SnapPointName_InfinitesItemSlot = "CreativeInfinitesSlot";
-
-		private List<UIImage> _sacrificeCogsSmall = new List<UIImage>();
-
-		private List<UIImage> _sacrificeCogsMedium = new List<UIImage>();
-
-		private List<UIImage> _sacrificeCogsBig = new List<UIImage>();
-
-		private UIImageFramed _sacrificePistons;
-
-		private UIParticleLayer _pistonParticleSystem;
-
-		private Asset<Texture2D> _pistonParticleAsset;
-
 		private int _sacrificeAnimationTimeLeft;
-
-		private bool _researchComplete;
-
 		private bool _hovered;
-
-		private int _lastItemIdSacrificed;
-
-		private int _lastItemAmountWeHad;
-
-		private int _lastItemAmountWeNeededTotal;
-
 		private bool _didClickSomething;
-
 		private bool _didClickSearchBar;
 		private UICreativeItemsInfiniteFilteringOptions uICreativeItemsInfiniteFilteringOptions;
 
 		public UIItemsDisplay(UIState uiStateThatHoldsThis)
 		{
-			_parentUIState = uiStateThatHoldsThis;
 			_itemIdsAvailableTotal = new List<int>();
 			_itemIdsAvailableToShow = new List<int>();
 			_filterer = new EntryFilterer<Item, IItemEntryFilter>();
@@ -115,7 +73,6 @@ namespace SatelliteStorage.UIElements
 			};
 			List<IItemEntryFilter> list2 = new List<IItemEntryFilter>();
 			list2.AddRange(list);
-			//list2.Add(new ItemFilters.MiscFallback(list));
 			_filterer.AddFilters(list2);
 			_filterer.SetSearchFilterObject(new ItemFilters.BySearch());
 			_sorter = new EntrySorter<int, ICreativeItemSortStep>();
@@ -150,11 +107,6 @@ namespace SatelliteStorage.UIElements
 					ModPacket packet = SatelliteStorage.instance.GetPacket();
 					packet.Write((byte)SatelliteStorage.MessageType.AddDriveChestItem);
 					packet.Write((byte)player.whoAmI);
-					/*
-					packet.Write7BitEncodedInt(Main.mouseItem.type);
-					packet.Write7BitEncodedInt(Main.mouseItem.stack);
-					packet.Write7BitEncodedInt(Main.mouseItem.prefix);
-					*/
 					packet.Send();
 					packet.Close();
 				}
@@ -166,7 +118,6 @@ namespace SatelliteStorage.UIElements
 		public void RebuildPage()
         {
 			UpdateContents();
-			//BuildPage();
 		}
 
 
@@ -190,9 +141,7 @@ namespace SatelliteStorage.UIElements
 			uIElement2.SetPadding(0f);
 			_containerSacrifice = uIElement2;
 
-			BuildInfinitesMenuContents(uIElement);
-			//BuildSacrificeMenuContents(uIElement2);
-			
+			BuildInfinitesMenuContents(uIElement);			
 			UpdateContents();
 			base.OnUpdate += UICreativeInfiniteItemsDisplay_OnUpdate;
 		}
@@ -244,12 +193,12 @@ namespace SatelliteStorage.UIElements
 			if (_itemGrid.hoverItemIndex <= -1) return;
 			DriveItem driveItem = _itemGrid._driveItems[_itemGrid.hoverItemIndex];
 			if (driveItem == null) return;
-			//SatelliteStorage.Debug("driveItem: " + driveItem.type + ", stack: " + driveItem.stack);
-			Vector2 mousePos = evt.MousePosition;
-
+			Item hoverItem = driveItem.ToItem();
 
 			Player player = Main.LocalPlayer;
 			Item mouseItem = player.inventory[58];
+			int slotToAdd = -1;
+			int countToAdd = 0;
 
 			bool isMouseItemAir = mouseItem.IsAir && Main.mouseItem.IsAir;
 			bool isMouseItemSame = mouseItem.type == driveItem.type;
@@ -263,14 +212,56 @@ namespace SatelliteStorage.UIElements
 				{
 					if (mouseItem.stack + 1 > mouseItem.maxStack) return;
 				}
+			}
+			else if (clickType == 2)
+			{
+
+				if (!isMouseItemAir) return;
+
+				int stackDiff = 0;
+
+				for (int s = 0; s < 50; s++)
+				{
+					if (player.inventory[s].type != ItemID.None &&
+						player.inventory[s].type == hoverItem.type &&
+						player.inventory[s].stack < hoverItem.maxStack &&
+						hoverItem.maxStack - player.inventory[s].stack > stackDiff &&
+						!player.inventory[s].favorited
+					)
+					{
+						stackDiff = hoverItem.maxStack - player.inventory[s].stack;
+						countToAdd = stackDiff;
+						if (countToAdd > hoverItem.stack) countToAdd = hoverItem.stack;
+						slotToAdd = s;
+					}
+				}
+
+				if (slotToAdd <= -1)
+				{
+					for (int s = 0; s < 50; s++)
+					{
+						if (player.inventory[s].type == ItemID.None)
+						{
+							slotToAdd = s;
+							countToAdd = hoverItem.maxStack;
+							if (countToAdd > hoverItem.stack) countToAdd = hoverItem.stack;
+							break;
+						}
+					}
+				}
 			} else
-            {
+			{
 				if (!isMouseItemAir) return;
 			}
 
 			if (Main.netMode == NetmodeID.SinglePlayer)
 			{
-				Item takeItem = DriveChestSystem.TakeItem(driveItem.type, driveItem.prefix, clickType == 1 ? 1 : 0);
+				if (clickType == 2 && slotToAdd <= -1) return;
+
+				int takeCount = clickType == 1 ? 1 : 0;
+				if (clickType == 2) takeCount = countToAdd;
+
+				Item takeItem = DriveChestSystem.TakeItem(driveItem.type, driveItem.prefix, takeCount);
 				if (takeItem == null) return;
 
 				if (clickType == 1)
@@ -283,8 +274,20 @@ namespace SatelliteStorage.UIElements
 					{
 						Main.mouseItem.stack += 1;
 					}
+				}
+				else if (clickType == 2)
+				{
+					if (player.inventory[slotToAdd].type == ItemID.None)
+                    {
+						player.inventory[slotToAdd] = takeItem.Clone();
+					} else
+                    {
+						player.inventory[slotToAdd].stack += countToAdd;
+					}
+
+					SoundEngine.PlaySound(SoundID.Grab);
 				} else
-                {
+				{
 					Main.mouseItem = takeItem;
 				}
 
@@ -311,6 +314,7 @@ namespace SatelliteStorage.UIElements
 				packet.Write((byte)clickType);
 				packet.Write7BitEncodedInt(driveItem.type);
 				packet.Write7BitEncodedInt(driveItem.prefix);
+				packet.Write7BitEncodedInt(0);
 				packet.Send();
 				packet.Close();
 			}
@@ -329,6 +333,11 @@ namespace SatelliteStorage.UIElements
 
 			item.OnMouseDown += (UIMouseEvent evt, UIElement listeningElement) =>
 			{
+				if (Main.keyState.IsKeyDown(Keys.LeftShift) || Main.keyState.IsKeyDown(Keys.RightShift))
+                {
+					TakeItem(evt, listeningElement, 2);
+					return;
+                }
 				TakeItem(evt, listeningElement, 0);
 				return;
 			};
@@ -338,6 +347,8 @@ namespace SatelliteStorage.UIElements
 				TakeItem(evt, listeningElement, 1);
 				return;
 			};
+
+			
 
 			UIElement uIElement = new UIElement
 			{
@@ -417,6 +428,7 @@ namespace SatelliteStorage.UIElements
 
 		private void filtersHelper_OnClickingOption()
 		{
+			if (onFiltersChanged != null) onFiltersChanged.Invoke();
 			UpdateContents();
 		}
 
@@ -544,6 +556,7 @@ namespace SatelliteStorage.UIElements
 			_searchString = contents;
 			_filterer.SetSearchFilter(contents);
 			UpdateContents();
+			if (onFiltersChanged != null) onFiltersChanged.Invoke();
 		}
 
 		private void OnStartTakingInput()

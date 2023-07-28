@@ -19,6 +19,7 @@ namespace SatelliteStorage
         private double lastGeneratorsTickTime = 0;
         private long lastGeneratorsServerTimestamp = 0;
         private bool requestStates = false;
+        private List<TagCompound> notFoundItems = new List<TagCompound>();
 
         public override void UpdateUI(GameTime gameTime)
         {
@@ -40,10 +41,13 @@ namespace SatelliteStorage
             {
                 DriveItem item = t_items[i];
                 itemsCompound.Add(Utils.DriveItemsSerializer.SaveDriveItem(item));
-                
-                //LogManager.GetLogger("SatelliteStorage").Debug(ItemIO.Save(item));
-                //SatelliteStorage.Debug("SAVE Item: " + item.type + ", stack: " + item.stack);
             }
+
+            foreach(TagCompound notFoundCompound in notFoundItems)
+            {
+                itemsCompound.Add(notFoundCompound);
+            }
+            notFoundItems.Clear();
 
             IList<TagCompound> generatorsCompound = new List<TagCompound>();
 
@@ -59,26 +63,34 @@ namespace SatelliteStorage
             tag.Set("SatelliteStorage_DriveChestItems", itemsCompound);
             tag.Set("SatelliteStorage_IsSputnikPlaced", DriveChestSystem.isSputnikPlaced);
             tag.Set("SatelliteStorage_Generators", generatorsCompound);
-            
+            tag.Set("SatelliteStorage_Version", SatelliteStorage.ModVersion);
+
             base.SaveWorldData(tag);
         }
 
         public override void LoadWorldData(TagCompound tag)
         {
-            base.LoadWorldData(tag);
-            
+            DriveChestSystem.isSputnikPlaced = false;
+            DriveChestSystem.ClearGenerators();
+            DriveChestSystem.ClearItems();
+
             IList<TagCompound> items = tag.GetList<TagCompound>("SatelliteStorage_DriveChestItems");
             IList<TagCompound> generatorsCompound = tag.GetList<TagCompound>("SatelliteStorage_Generators");
             DriveChestSystem.isSputnikPlaced = tag.GetBool("SatelliteStorage_IsSputnikPlaced");
+            int modversion = tag.GetInt("SatelliteStorage_Version");
+            //SatelliteStorage.Debug("Mod Version: " + modversion);
             List<DriveItem> loadedItems = new List<DriveItem>();
+
 
             for(int i = 0; i < items.Count; i++)
             {
                 TagCompound itemCompound = items[i];
-                //LogManager.GetLogger("SatelliteStorage").Debug(itemCompound);
-                DriveItem item = Utils.DriveItemsSerializer.LoadDriveItem(itemCompound);
-                loadedItems.Add(item);
-                //SatelliteStorage.Debug("LOAD Item: "+item.type + ", stack: " + item.stack);
+                DriveItem item = Utils.DriveItemsSerializer.LoadDriveItem(itemCompound, modversion);
+                if (item != null) loadedItems.Add(item);
+                else
+                {
+                    notFoundItems.Add(itemCompound);
+                }
             }
 
             Dictionary<int, int> generators = DriveChestSystem.GetGenerators();
@@ -89,6 +101,8 @@ namespace SatelliteStorage
 
             DriveChestSystem.InitItems(loadedItems);
             DriveChestSystem.InitGenerators(generators);
+
+            base.LoadWorldData(tag);
         }
 
         public override void OnWorldUnload()
@@ -107,8 +121,7 @@ namespace SatelliteStorage
         {
             Recipe.Create(ItemID.MagicMirror, 1)
             .AddIngredient(ItemID.Glass, 250)
-            .AddIngredient(ItemID.FallenStar, 50)
-            .AddIngredient(ItemID.ReflectiveDye, 1)
+            .AddIngredient(ItemID.FallenStar, 25)
             .Register();
 
             Recipe.Create(ItemID.IceMirror, 1)
@@ -116,26 +129,37 @@ namespace SatelliteStorage
             .AddIngredient(ItemID.IceBlock, 50)
             .Register();
 
-            /*
-            Recipe.Create(ModContent.ItemType<Items.SputnikItem>(), 1)
-            .AddIngredient(ItemID.DirtBlock, 1)
-            .Register();
+            void AddQuartzRecipe(int itemID, int stack)
+            {
+                Recipe.Create(ModContent.ItemType<Items.QuartzShard>(), 1)
+                .AddIngredient(ItemID.GoldBar, 3)
+                .AddIngredient(ItemID.Obsidian, 5)
+                .AddIngredient(itemID, stack)
+                .AddTile(TileID.Anvils)
+                .Register();
 
-            Recipe.Create(ModContent.ItemType<Items.DriveChestItem>(), 1)
-            .AddIngredient(ItemID.DirtBlock, 1)
-            .Register();
-            */
+                Recipe.Create(ModContent.ItemType<Items.QuartzShard>(), 1)
+                .AddIngredient(ItemID.PlatinumBar, 3)
+                .AddIngredient(ItemID.Obsidian, 5)
+                .AddIngredient(itemID, stack)
+                .AddTile(TileID.Anvils)
+                .Register();
+            }
+
+            AddQuartzRecipe(ItemID.Amethyst, 1);
         }
 
         public override void PostUpdateWorld()
         {
-            if (Main.netMode == NetmodeID.SinglePlayer && Main.gameTimeCache.TotalGameTime.TotalMilliseconds > lastGeneratorsTickTime + SatelliteStorage.GeneratorsInterval)
+            int interval = SatelliteStorage.GeneratorsInterval;
+            if (Main.raining) interval = interval / 2;
+
+            if (Main.netMode == NetmodeID.SinglePlayer && Main.gameTimeCache.TotalGameTime.TotalMilliseconds > lastGeneratorsTickTime + interval)
             {
                 lastGeneratorsTickTime = Main.gameTimeCache.TotalGameTime.TotalMilliseconds;
 
                 DriveChestSystem.OnGeneratorsTick();
             }
-           
 
             base.PostUpdateWorld();
         }
@@ -144,7 +168,11 @@ namespace SatelliteStorage
         {
             if (Main.netMode == NetmodeID.Server) {
                 long timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
-                if (timestamp > lastGeneratorsServerTimestamp + SatelliteStorage.GeneratorsInterval)
+
+                int interval = SatelliteStorage.GeneratorsInterval;
+                if (Main.raining) interval = interval / 2;
+
+                if (timestamp > lastGeneratorsServerTimestamp + interval)
                 {
                     lastGeneratorsServerTimestamp = timestamp;
                     DriveChestSystem.OnGeneratorsTick();

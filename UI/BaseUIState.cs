@@ -20,6 +20,7 @@ namespace SatelliteStorage.UI
     {
         public virtual void OnUpdateUI(GameTime gameTime)
         {
+
         }
 
         public virtual void OnModifyInterfaceLayers(List<GameInterfaceLayer> layers)

@@ -20,21 +20,18 @@ namespace SatelliteStorage.Tiles
 
 		public override void SetStaticDefaults()
 		{
-			// Properties
 			Main.tileLighted[Type] = true;
 			Main.tileFrameImportant[Type] = true;
 			Main.tileNoAttach[Type] = true;
 			Main.tileOreFinderPriority[Type] = 500;
 			TileID.Sets.DisableSmartCursor[Type] = true;
 
-			// Names
 			ContainerName.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.ItemName." + item_name + "Item"));
 
 			ModTranslation name = CreateMapEntryName();
 			name.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.ItemName." + item_name+ "Item"));
 			AddMapEntry(new Color(108, 65, 138), name, MapName);
 
-			// Placement
 
 			TileObjectData.newTile.CopyFrom(TileObjectData.Style2xX);
 			TileObjectData.newTile.Height = 3;
@@ -82,15 +79,11 @@ namespace SatelliteStorage.Tiles
 
 		public override void MouseOver(int i, int j)
 		{
-
 			Player player = Main.LocalPlayer;
-
 
 			player.cursorItemIconText = Language.GetTextValue("Mods.SatelliteStorage.ItemName." + item_name + "Item");
 
 			player.noThrow = 2;
-			
-			//player.cursorItemIconEnabled = true;
 		}
 
 		public override void MouseOverFar(int i, int j)
@@ -139,25 +132,6 @@ namespace SatelliteStorage.Tiles
 			base.PlaceInWorld(i, j, item);
 		}
 
-		/*
-		public override void AnimateIndividualTile(int type, int i, int j, ref int frameXOffset, ref int frameYOffset)
-		{
-			// Tweak the frame drawn by x position so tiles next to each other are off-sync and look much more interesting
-			int uniqueAnimationFrame = Main.tileFrame[Type] + i;
-			
-			if (i % 1 == 0)
-				uniqueAnimationFrame += 1;
-			if (i % 2 == 0)
-				uniqueAnimationFrame += 1;
-			if (i % 3 == 0)
-				uniqueAnimationFrame += 1;
-			
-			uniqueAnimationFrame %= 3;
-
-			frameYOffset = uniqueAnimationFrame * 54;
-		}
-		*/
-
 		public override bool PreDraw(int i, int j, SpriteBatch spriteBatch)
 		{
 			Tile tile = Main.tile[i, j];
@@ -168,18 +142,17 @@ namespace SatelliteStorage.Tiles
 
 			int frameYOffset = Main.tileFrame[Type] * AnimationFrameHeight;
 
-			/*
+			
 			int uniqueAnimationFrame = Main.tileFrame[Type] + i;
 
 			if (i % 2 == 0)
 				uniqueAnimationFrame += 1;
-			if (i % 3 == 0)
-				uniqueAnimationFrame += 1;
+
 
 			uniqueAnimationFrame %= 4;
 
 			frameYOffset = uniqueAnimationFrame * AnimationFrameHeight;
-			*/
+			
 
 			spriteBatch.Draw(
 				texture,

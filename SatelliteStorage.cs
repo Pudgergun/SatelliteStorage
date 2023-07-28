@@ -47,12 +47,15 @@ namespace SatelliteStorage
 	{
         public static SatelliteStorage instance;
         public DriveChestSystem driveChestSystem;
+        public static int itemsCount => DriveChestSystem.itemsCount;
         private Dictionary<int, UI.BaseUIState> uidict = new Dictionary<int, UI.BaseUIState>();
 
         public static bool TakeDriveChestItemSended = false;
         public static bool AddDriveChestItemSended = false;
 
         public const int GeneratorsInterval = 20000;
+        public const int ModVersion = 1;
+
         internal enum MessageType : byte
         {
             RequestDriveChestItems,
@@ -66,7 +69,8 @@ namespace SatelliteStorage
             RequestSputnikState,
             ChangeGeneratorState,
             SyncGeneratorState,
-            RequestStates
+            RequestStates,
+            StorageItemsCount
         }
 
         internal enum GeneratorTypes : byte
@@ -117,13 +121,12 @@ namespace SatelliteStorage
             );
 
             generators.Add((int)GeneratorTypes.HellstoneGenerator,
-                new Generator(25)
-                .AddDrop(ItemID.Obsidian, 1, 100, (int)ChancesTypes.VeryHighChance)
+                new Generator(15)
                 .AddDrop(ItemID.HellstoneBar, 1, 25, (int)ChancesTypes.AverageChance)
             );
 
             generators.Add((int)GeneratorTypes.MeteoriteGenerator,
-                new Generator(10)
+                new Generator(15)
                 .AddDrop(ItemID.MeteoriteBar, 1, 100, (int)ChancesTypes.AverageChance)
             );
 
@@ -286,6 +289,7 @@ namespace SatelliteStorage
                         var packet = GetPacket();
                         packet.Write((byte)MessageType.ResponseDriveChestItems);
                         packet.Write((byte)playernumber);
+                        packet.Write((byte)reader.ReadByte());
                         Utils.DriveItemsSerializer.WriteDriveItemsToPacket(DriveChestSystem.GetItems(), packet);
                         packet.Send(playernumber);
                         packet.Close();
@@ -313,23 +317,52 @@ namespace SatelliteStorage
                     case MessageType.RequestSputnikState:
                         playernumber = reader.ReadByte();
                         SendSputnikState(playernumber);
-                        break;                    
+                        DriveChestSystem.SendSyncItemsCount(playernumber);
+                        break;
                     case MessageType.RequestStates:
                         playernumber = reader.ReadByte();
                         DriveChestSystem.SyncAllGeneratorsTo(playernumber);
                         SendSputnikState(playernumber);
+                        DriveChestSystem.SendSyncItemsCount(playernumber);
                         break;
                     case MessageType.TakeDriveChestItem:
                         playernumber = reader.ReadByte();
 
+                        void SendTakeDriveVoidPacket()
+                        {
+                            var takeItemVoidPacket = GetPacket();
+                            takeItemVoidPacket.Write((byte)MessageType.TakeDriveChestItem);
+                            takeItemVoidPacket.Write((byte)playernumber);
+                            takeItemVoidPacket.Write(false);
+                            takeItemVoidPacket.Write7BitEncodedInt(0);
+                            takeItemVoidPacket.Write7BitEncodedInt(0);
+                            takeItemVoidPacket.Write7BitEncodedInt(0);
+                            takeItemVoidPacket.Write((byte)0);
+                            takeItemVoidPacket.Write7BitEncodedInt(0);
+                            takeItemVoidPacket.Send(playernumber);
+                            takeItemVoidPacket.Close();
+                        }
+
                         int clickType = reader.ReadByte();
 
                         Item tmouseItem = Main.player[playernumber].inventory[58];
-
+                        Player tdplayer = Main.player[playernumber];
                         bool itemTaked = false;
 
                         int takeItemType = reader.Read7BitEncodedInt();
                         int takeItemPrefix = reader.Read7BitEncodedInt();
+
+                        DriveItem hoverDriveItem = new DriveItem();
+                        hoverDriveItem.type = takeItemType;
+                        hoverDriveItem.prefix = takeItemPrefix;
+
+                        Item hoverItem = new Item();
+                        hoverItem.type = takeItemType;
+                        hoverItem.SetDefaults(hoverItem.type);
+                        hoverItem.stack = DriveChestSystem.GetItemCount(hoverDriveItem);
+
+                        int slotToAdd = -1;
+                        int countToAdd = 0;
 
                         Item takeItem;
 
@@ -339,24 +372,87 @@ namespace SatelliteStorage
 
                         bool isTMouseItemAir = tmouseItem.IsAir;
                         bool isTMouseItemSame = tmouseItem.type == takeItemType;
-                        if (!isTMouseItemAir && !isTMouseItemSame) return;
+                        if (!isTMouseItemAir && !isTMouseItemSame)
+                        {
+                            SendTakeDriveVoidPacket();
+                            return;
+                        }
 
                         if (clickType == 1)
                         {
-                            if (!isTMouseItemAir && !isTMouseItemSame) return;
+                            if (!isTMouseItemAir && !isTMouseItemSame)
+                            {
+                                SendTakeDriveVoidPacket();
+                                return;
+                            }
 
                             if (isTMouseItemSame)
                             {
-                                if (tmouseItem.stack + 1 > tmouseItem.maxStack) return;
+                                if (tmouseItem.stack + 1 > tmouseItem.maxStack)
+                                {
+                                    SendTakeDriveVoidPacket();
+                                    return;
+                                }
+                            }
+                        }
+                        if (clickType == 2)
+                        {
+                            if (!isTMouseItemAir)
+                            {
+                                SendTakeDriveVoidPacket();
+                                return;
+                            }
+
+                            int stackDiff = 0;
+                            
+                            for (int s = 0; s < 50; s++)
+                            {
+                                if (tdplayer.inventory[s].type != ItemID.None &&
+                                    tdplayer.inventory[s].type == hoverItem.type &&
+                                    tdplayer.inventory[s].stack < hoverItem.maxStack &&
+                                    hoverItem.maxStack - tdplayer.inventory[s].stack > stackDiff &&
+                                    !tdplayer.inventory[s].favorited
+                                )
+                                {
+                                    stackDiff = hoverItem.maxStack - tdplayer.inventory[s].stack;
+                                    countToAdd = stackDiff;
+                                    if (countToAdd > hoverItem.stack) countToAdd = hoverItem.stack;
+                                    slotToAdd = s;
+                                }
+                            }
+
+                            if (slotToAdd <= -1)
+                            {
+                                for (int s = 0; s < 50; s++)
+                                {
+                                    if (slotToAdd <= -1 && tdplayer.inventory[s].type == ItemID.None)
+                                    {
+                                        slotToAdd = s;
+                                        countToAdd = hoverItem.maxStack;
+                                        if (countToAdd > hoverItem.stack) countToAdd = hoverItem.stack;
+                                    }
+                                }
                             }
                         }
                         else
                         {
-                            if (!isTMouseItemAir) return;
+                            if (!isTMouseItemAir)
+                            {
+                                SendTakeDriveVoidPacket();
+                                return;
+                            }
                         }
 
+                        if (clickType == 2 && slotToAdd <= -1)
+                        {
+                            SendTakeDriveVoidPacket();
+                            return;
+                        }
 
-                        takeItem = DriveChestSystem.TakeItem(takeItemType, takeItemPrefix, clickType == 1 ? 1 : 0);
+                        int takeCount = clickType == 1 ? 1 : 0;
+                        if (clickType == 2) takeCount = countToAdd;
+
+                        takeItem = DriveChestSystem.TakeItem(takeItemType, takeItemPrefix, takeCount);
                         if (takeItem != null)
                         {
                             if (clickType == 1)
@@ -374,6 +470,22 @@ namespace SatelliteStorage
                                     stack = takeItem.stack = tmouseItem.stack + 1;
                                     prefix = takeItem.prefix;
                                 }
+                            }
+                            else if (clickType == 2)
+                            {
+                                if (tdplayer.inventory[slotToAdd].type == ItemID.None)
+                                {
+                                    tdplayer.inventory[slotToAdd] = takeItem.Clone();
+                                }
+                                else
+                                {
+                                    tdplayer.inventory[slotToAdd].stack += countToAdd;
+                                }
+
+                                type = tdplayer.inventory[slotToAdd].type;
+                                stack = tdplayer.inventory[slotToAdd].stack;
+                                prefix = tdplayer.inventory[slotToAdd].prefix;
+                                itemTaked = true;
                             } else
                             {
                                 itemTaked = true;
@@ -392,14 +504,20 @@ namespace SatelliteStorage
                         takeItemPacket.Write7BitEncodedInt(stack);
                         takeItemPacket.Write7BitEncodedInt(prefix);
                         takeItemPacket.Write((byte)clickType);
+                        takeItemPacket.Write7BitEncodedInt(slotToAdd);
                         takeItemPacket.Send(playernumber);
                         takeItemPacket.Close();
 
                         break;
                     case MessageType.AddDriveChestItem:
                         playernumber = reader.ReadByte();
+                        int addDriveChestItemType = reader.ReadByte();
+                        int fromSlot = 58;
 
-                        Item amouseItem = Main.player[playernumber].inventory[58];
+                        if (addDriveChestItemType == 1)
+                            fromSlot = reader.Read7BitEncodedInt();
+
+                        Item amouseItem = Main.player[playernumber].inventory[fromSlot];
 
                         bool added = false;
 
@@ -418,6 +536,7 @@ namespace SatelliteStorage
                         addItemPacket.Write((byte)MessageType.AddDriveChestItem);
                         addItemPacket.Write((byte)playernumber);
                         addItemPacket.Write(added);
+                        addItemPacket.Write7BitEncodedInt(fromSlot);
                         addItemPacket.Send(playernumber);
                         addItemPacket.Close();
                         break;
@@ -460,8 +579,6 @@ namespace SatelliteStorage
                             {
                                 DriveChestSystem.SubItem(u.type, u.stack);
                             }
-
-                            //SatelliteStorage.Debug(item.Name + "(" + u.stack + ") from " + u.from + (u.from == 0 ? (" at slot " + u.slot) : ""));
                         });
 
                         if (isMouseItemAir)
@@ -519,7 +636,6 @@ namespace SatelliteStorage
 
                         break;
                     default:
-                        //Logger.WarnFormat("ExampleMod: Unknown Message type: {0}", msgType);
                         break;
                 }
             }
@@ -534,13 +650,13 @@ namespace SatelliteStorage
                 {
                     case MessageType.ResponseDriveChestItems:
                         playernumber = reader.ReadByte();
-
+                        bool checkPosition = reader.ReadByte() == 1 ? true : false;
                         List<DriveItem> items = Utils.DriveItemsSerializer.ReadDriveItems(reader);
                         DriveChestSystem.InitItems(items);
                         SoundEngine.PlaySound(SoundID.MenuOpen);
                         Main.playerInventory = true;
                         SetUIState((int)UI.UITypes.DriveChest, true);
-
+                        if (checkPosition) UI.DriveChestUI.SetOpenedPosition(Main.LocalPlayer.position);
                         break;
                     case MessageType.TakeDriveChestItem:
                         playernumber = reader.ReadByte();
@@ -552,9 +668,18 @@ namespace SatelliteStorage
                         takeItem.prefix = reader.Read7BitEncodedInt();
 
                         byte clickType = reader.ReadByte();
+                        int invslot = reader.Read7BitEncodedInt();
 
                         if (itemTaked)
                         {
+                            if (clickType == 2)
+                            {
+                                SoundEngine.PlaySound(SoundID.Grab);
+                                TakeDriveChestItemSended = false;
+                                Main.LocalPlayer.inventory[invslot] = takeItem;
+                                break;
+                            }
+
                             Main.mouseItem = takeItem;
                             if (clickType == 1)
                             {
@@ -572,7 +697,8 @@ namespace SatelliteStorage
                     case MessageType.AddDriveChestItem:
                         playernumber = reader.ReadByte();
                         bool added = reader.ReadBoolean();
-                        Item mouseItem = player.inventory[58];
+                        int fromslot = reader.Read7BitEncodedInt();
+                        Item mouseItem = player.inventory[fromslot];
 
                         if (added)
                         {
@@ -646,8 +772,12 @@ namespace SatelliteStorage
                         UI.DriveChestUI.ReloadItems();
 
                         break;
+                    case MessageType.StorageItemsCount:
+
+                        DriveChestSystem.itemsCount = reader.Read7BitEncodedInt();
+                        break;
                     default:
-                        Debug("ExampleMod: Unknown Message type: " + msgType);
+                        Debug("SatelliteStorage: Unknown Message type: " + msgType);
                         break;
                 }
             }

@@ -25,10 +25,6 @@ namespace SatelliteStorage.UIElements
 		
 		private int _itemsPerLine;
 
-		private const int sizePerEntryX = 44;
-
-		private const int sizePerEntryY = 44;
-
 		private List<SnapPoint> _dummySnapPoints = new List<SnapPoint>();
 
 		public int hoverItemIndex = -1;
@@ -67,8 +63,6 @@ namespace SatelliteStorage.UIElements
 					Main.LocalPlayer.mouseInterface = true;
 					hoverItemIndex = i;
 					ItemSlot.OverrideHover(ref inv, context);
-					//ItemSlot.LeftClick(ref inv, context);
-					//ItemSlot.RightClick(ref inv, context);
 					ItemSlot.MouseHover(ref inv, context);
 					
 					cREATIVE_ItemSlotShouldHighlightAsSelected = true;
@@ -141,7 +135,6 @@ namespace SatelliteStorage.UIElements
 
 			public DriveItemData()
             {
-
             }
 		}
 

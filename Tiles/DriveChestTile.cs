@@ -17,9 +17,6 @@ namespace SatelliteStorage.Tiles
 
 		public override void SetStaticDefaults()
 		{
-			// Properties
-			//Main.tileSpelunker[Type] = true;
-			//Main.tileContainer[Type] = true;
 			Main.tileLighted[Type] = true;
 			Main.tileShine2[Type] = true;
 			Main.tileShine[Type] = 1200;
@@ -27,33 +24,23 @@ namespace SatelliteStorage.Tiles
 			Main.tileNoAttach[Type] = true;
 			Main.tileOreFinderPriority[Type] = 500;
 			TileID.Sets.HasOutlines[Type] = true;
-			//TileID.Sets.BasicChest[Type] = true;
 			TileID.Sets.DisableSmartCursor[Type] = true;
 
 			DustType = DustID.BlueCrystalShard;
 
-			// Names
 			ContainerName.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.UITitles.DriveChest"));
 
 			ModTranslation name = CreateMapEntryName();
 			name.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.UITitles.DriveChest"));
-			//AddMapEntry(new Color(200, 200, 200), name, MapName);
 
-			//name = CreateMapEntryName(Name + "_Locked"); // With multiple map entries, you need unique translation keys.
-			//name.SetDefault("Locked Example Chest");
 			AddMapEntry(new Color(73, 137, 201), name, MapName);
 
-			// Placement
 			TileObjectData.newTile.CopyFrom(TileObjectData.Style3x3);
 			TileObjectData.newTile.Origin = new Point16(2, 1);
 			TileObjectData.newTile.CoordinateHeights = new int[3] { 16, 16, 16 };
 			TileObjectData.newTile.CoordinateWidth = 16;
-			//TileObjectData.newTile.CoordinatePadding = 2;
-			//TileObjectData.newTile.AnchorInvalidTiles = new int[] { TileID.MagicalIceBlock };
 			TileObjectData.newTile.StyleHorizontal = true;
 			TileObjectData.newTile.LavaDeath = false;
-
-			//TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.EmptyTile, TileObjectData.newTile.Width, 0);
 
 			TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile | AnchorType.SolidWithTop | AnchorType.SolidSide, TileObjectData.newTile.Width, 0);
 			TileObjectData.addTile(Type);
@@ -93,7 +80,6 @@ namespace SatelliteStorage.Tiles
 			player.cursorItemIconText = Language.GetTextValue("Mods.SatelliteStorage.UITitles.DriveChest");
 
 			player.noThrow = 2;
-			//player.cursorItemIconEnabled = true;
 		}
 
 		public override void MouseOverFar(int i, int j)
@@ -122,7 +108,6 @@ namespace SatelliteStorage.Tiles
         {
 			if (Main.netMode == NetmodeID.Server)
             {
-				//SatelliteStorage.Debug("Place In World");
             }
 
             base.PlaceInWorld(i, j, item);

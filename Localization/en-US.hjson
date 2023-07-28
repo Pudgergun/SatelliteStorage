@@ -2,10 +2,13 @@ Mods: {
     SatelliteStorage: {
         Common: {
             GeneratorDropsTitle: Generated items:
+			ItemsCounter: Items Counter
+			ItemsCounterCount: items in storage
             CantUseWithoutSputnik: No available Satellite
         }
         
         ItemName: {
+            ItemsCountAccessoryItem: Items Counter
             QuartzShard: Quartz Shard
             QuartzPickaxe: Quartz Pickaxe
             QuartzSword: Quartz Sword
@@ -26,6 +29,7 @@ Mods: {
             SoulGeneratorItem: Soul Generator
             ShroomiteGeneratorItem: Shroomite Generator
             SpectreGeneratorItem: Spectre Generator
+            QuartzCrateItem: Quartz Crate
         }
 
         ItemTooltip: {
@@ -41,6 +45,10 @@ Mods: {
                 '''
                 Can be placed only in the Space
                 '''
+			ItemsCountAccessoryItem:
+				'''
+				Shows items count in storage
+				'''
         }
 
         ChanceNames: {
@@ -54,6 +62,7 @@ Mods: {
         UITitles: {
             DriveChest: Network Terminal
             Sputnik: Satellite
+            SputnikItem: Satellite
             DriveChestSearch: Search
             DriveChestRecipes: Recipes
             DriveChestCraft: Crafting

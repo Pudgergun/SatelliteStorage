@@ -37,7 +37,7 @@ namespace SatelliteStorage.UIElements
 		private bool _didClickSearchBar;
 
 		public Action<int> onRecipeChoosen;
-
+		public EntryFilterer<Item, IItemEntryFilter> _filterer;
 		public int selectedRecipe = -1;
 
 		public static bool hidden = true;
@@ -54,7 +54,6 @@ namespace SatelliteStorage.UIElements
 		public void RebuildPage()
 		{
 			UpdateContents();
-			//BuildPage();
 		}
 
 
@@ -79,7 +78,6 @@ namespace SatelliteStorage.UIElements
 			_containerSacrifice = uIElement2;
 
 			BuildInfinitesMenuContents(uIElement);
-			//BuildSacrificeMenuContents(uIElement2);
 
 			UpdateContents();
 			base.OnUpdate += UICreativeInfiniteItemsDisplay_OnUpdate;
@@ -112,7 +110,6 @@ namespace SatelliteStorage.UIElements
 			if (_itemGrid.hoverItemIndex <= -1) return;
 			DriveItem driveItem = _itemGrid._driveItems[_itemGrid.hoverItemIndex];
 			if (driveItem == null) return;
-			//SatelliteStorage.Debug("driveItem: " + driveItem.type + ", stack: " + driveItem.stack);
 			Vector2 mousePos = evt.MousePosition;
 
 
@@ -190,12 +187,24 @@ namespace SatelliteStorage.UIElements
 			_hovered = true;
 		}
 
-		private void UpdateContents()
+		public void UpdateContents()
 		{
 			UpdateItemsTypes();
 			_itemIdsAvailableToShow.Clear();
 
-			_itemIdsAvailableToShow.AddRange(_itemIdsAvailableTotal);
+			if (_filterer != null)
+            {
+				_itemIdsAvailableToShow.AddRange(_itemIdsAvailableTotal.Where((int x) =>
+				{
+					if (!ContentSamples.ItemsByType.ContainsKey(x)) return false;
+					return _filterer.FitsFilter(ContentSamples.ItemsByType[x]);
+				}));
+			} else
+            {
+				_itemIdsAvailableToShow.AddRange(_itemIdsAvailableTotal);
+			}
+
+
 			_itemIdsAvailableToShow.Sort(_sorter);
 
 			List<DriveItem> recipeItems = new List<DriveItem>();

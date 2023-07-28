@@ -8,6 +8,8 @@ using Terraria.ModLoader.IO;
 using Terraria.ID;
 using log4net;
 using SatelliteStorage.DriveSystem;
+using SatelliteStorage.UI;
+using Terraria.Audio;
 
 namespace SatelliteStorage
 {
@@ -15,6 +17,40 @@ namespace SatelliteStorage
     {
 
         private static List<bool> oldAdjList;
+
+        public override bool ShiftClickSlot(Item[] inventory, int context, int slot)
+        {
+            if (DriveChestUI.isDrawing)
+            {
+                if (Main.mouseItem.favorited) return false;
+
+                if (Main.netMode == NetmodeID.SinglePlayer)
+                {
+                    if (!DriveChestSystem.AddItem(DriveItem.FromItem(Main.LocalPlayer.inventory[slot]))) return false;
+                    DriveChestUI.ReloadItems();
+                    Main.LocalPlayer.inventory[slot].TurnToAir();
+                    SoundEngine.PlaySound(SoundID.Grab);
+                }
+
+                if (Main.netMode == NetmodeID.MultiplayerClient)
+                {
+                    if (SatelliteStorage.AddDriveChestItemSended) return false;
+                    SatelliteStorage.AddDriveChestItemSended = true;
+                    ModPacket packet = SatelliteStorage.instance.GetPacket();
+                    packet.Write((byte)SatelliteStorage.MessageType.AddDriveChestItem);
+                    packet.Write((byte)Main.LocalPlayer.whoAmI);
+                    packet.Write((byte)1);
+                    packet.Write7BitEncodedInt(slot);
+
+                    packet.Send();
+                    packet.Close();
+                }
+
+                return false;
+            }
+
+            return base.ShiftClickSlot(inventory, context, slot);
+        }
 
         public override bool CanUseItem(Item item)
         {

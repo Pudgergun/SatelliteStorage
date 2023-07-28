@@ -17,17 +17,52 @@ namespace SatelliteStorage.Utils
         {
             TagCompound tag = new TagCompound();
             tag["type"] = item.type;
+
+            ModItem modItem = item.ToItem().ModItem;
+
+            if (modItem != null)
+            {
+                tag["mod"] = modItem.Mod.Name;
+                tag["name"] = modItem.Name;
+            } else
+            {
+                tag["name"] = "default";
+            }
+            
             tag["stack"] = item.stack;
             tag["prefix"] = item.prefix;
             return tag;
         }
 
-        public static DriveItem LoadDriveItem(TagCompound tag)
+        public static DriveItem LoadDriveItem(TagCompound tag, int version = 1)
         {
             DriveItem item = new DriveItem();
-            item.type = tag.GetInt("type");
+
+            string name = tag.GetString("name");
+
+            if (name == "default" || version <= 0)
+            {
+                item.type = tag.GetInt("type");
+            } else
+            {
+                try
+                {
+                    Mod itemMod = ModLoader.GetMod(tag.GetString("mod"));
+                    if (itemMod == null) return null;
+                    ModItem outitem;
+                    bool itemFound = itemMod.TryFind(name, out outitem);
+                    if (!itemFound) return null;
+                    item.type = outitem.Type;
+
+                } catch (KeyNotFoundException exc)
+                {
+                    return null;
+                }
+            }
+            
             item.stack = tag.GetInt("stack");
             int prefix = tag.GetInt("prefix");
+
             if (prefix != 0) item.prefix = prefix;
             return item;
         }

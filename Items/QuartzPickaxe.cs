@@ -29,15 +29,20 @@ namespace SatelliteStorage.Items
 			Item.UseSound = SoundID.Item1;
 			Item.autoReuse = true;
 			Item.useTurn = true;
-			Item.pick = 65; // How strong the pickaxe is, see https://terraria.gamepedia.com/Pickaxe_power for a list of common values
+			Item.pick = 60; // How strong the pickaxe is, see https://terraria.gamepedia.com/Pickaxe_power for a list of common values
 			Item.maxStack = 1;
 		}
 
 		public override void MeleeEffects(Player player, Rectangle hitbox)
 		{
-			if (Main.rand.NextBool(10))
+			if (Main.rand.NextBool(5))
 			{
 				Dust.NewDust(new Vector2(hitbox.X, hitbox.Y), hitbox.Width, hitbox.Height, DustID.IceTorch);
+			}
+
+			if (Main.rand.NextBool(8))
+			{
+				Dust.NewDust(new Vector2(hitbox.X, hitbox.Y), hitbox.Width, hitbox.Height, DustID.GemAmethyst, Scale: 0.5f);
 			}
 		}
 
@@ -45,7 +50,7 @@ namespace SatelliteStorage.Items
 		public override void AddRecipes()
 		{
 			CreateRecipe()
-				.AddIngredient(ModContent.ItemType<Items.QuartzShard>(), 10)
+				.AddIngredient(ModContent.ItemType<Items.QuartzShard>(), 3)
 				.AddIngredient(ItemID.Wood, 3)
 				.AddTile(TileID.Anvils)
 				.Register();

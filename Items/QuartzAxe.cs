@@ -15,7 +15,7 @@ namespace SatelliteStorage.Items
 
 		public override void SetDefaults()
 		{
-			Item.damage = 20;
+			Item.damage = 12;
 			Item.DamageType = DamageClass.Melee;
 			Item.width = 40;
 			Item.height = 40;
@@ -28,15 +28,20 @@ namespace SatelliteStorage.Items
 			Item.UseSound = SoundID.Item1;
 			Item.autoReuse = true;
 			Item.useTurn = true;
-			Item.axe = 15;
+			Item.axe = 12;
 			Item.maxStack = 1;
 		}
 
 		public override void MeleeEffects(Player player, Rectangle hitbox)
 		{
-			if (Main.rand.NextBool(10))
+			if (Main.rand.NextBool(5))
 			{
 				Dust.NewDust(new Vector2(hitbox.X, hitbox.Y), hitbox.Width, hitbox.Height, DustID.IceTorch);
+			}
+
+			if (Main.rand.NextBool(8))
+			{
+				Dust.NewDust(new Vector2(hitbox.X, hitbox.Y), hitbox.Width, hitbox.Height, DustID.GemAmethyst, Scale: 0.5f);
 			}
 		}
 
@@ -44,7 +49,7 @@ namespace SatelliteStorage.Items
 		public override void AddRecipes()
 		{
 			CreateRecipe()
-				.AddIngredient(ModContent.ItemType<Items.QuartzShard>(), 8)
+				.AddIngredient(ModContent.ItemType<Items.QuartzShard>(), 3)
 				.AddIngredient(ItemID.Wood, 3)
 				.AddTile(TileID.Anvils)
 				.Register();

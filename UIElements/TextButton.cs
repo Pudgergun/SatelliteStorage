@@ -69,9 +69,7 @@ namespace SatelliteStorage.UIElements
             }
             
             textElement = new UIText(text, textScale + scaleOffset);
-           // textElement.DynamicallyScaleDownToWidth = true;
             textElement.VAlign = 0.5f;
-            //textElement.HAlign = 0.5f;
             textElement.Left.Set(0, 0);
             textElement.TextColor = color;
             textElement.TextOriginX = 0;
@@ -84,19 +82,6 @@ namespace SatelliteStorage.UIElements
         {
 
             base.Draw(spriteBatch);
-            /*
-            CalculatedStyle space = base.GetDimensions();
-            Vector2 drawPos = space.Position() + textPosition;
-            if (focused)
-            {
-                if (scaleOffset < textScale/2) scaleOffset += textScale * 0.01f;
-                spriteBatch.DrawString(FontAssets.MouseText.Value, text, drawPos, Color.Yellow, 0, new Vector2(0, 0), textScale + scaleOffset, SpriteEffects.None, 0);
-            } else
-            {
-                if (scaleOffset > 0) scaleOffset -= textScale * 0.01f;
-                spriteBatch.DrawString(FontAssets.MouseText.Value, text, drawPos, Color.White, 0, new Vector2(0, 0), textScale + scaleOffset, SpriteEffects.None, 0);
-            }
-            */
         }
     }
 }

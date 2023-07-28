@@ -1,19 +1,8 @@
-﻿using System.Linq;
-using Terraria;
-using Terraria.UI;
+﻿using Terraria;
 using Terraria.ModLoader;
-using Terraria.ModLoader.UI;
-using Microsoft.Xna.Framework.Graphics;
 using Terraria.ID;
-using Terraria.GameContent.Creative;
-using Microsoft.Xna.Framework;
 using System.Collections.Generic;
-using Terraria.IO;
-using Terraria.WorldBuilding;
 using System;
-using ReLogic.Content;
-using Terraria.GameContent.UI.Elements;
-using Terraria.Localization;
 using Terraria.Audio;
 
 namespace SatelliteStorage.DriveSystem
@@ -37,6 +26,7 @@ namespace SatelliteStorage.DriveSystem
 		public static bool isSputnikPlaced = false;
 
         public static bool checkRecipesRefresh = false;
+		public static int itemsCount = 0;
 
         public DriveChestSystem()
         {
@@ -47,12 +37,25 @@ namespace SatelliteStorage.DriveSystem
         {
             checkRecipesRefresh = false;
             instance.items = items;
-        }
+
+			foreach(DriveItem itm in items)
+            {
+				if (Main.netMode == NetmodeID.Server || Main.netMode == NetmodeID.SinglePlayer) itemsCount += itm.stack;
+			}
+
+			SendSyncItemsCount();
+		}
 
         public static void ClearItems()
         {
             instance.items.Clear();
-        }
+			if (Main.netMode == NetmodeID.Server || Main.netMode == NetmodeID.SinglePlayer) itemsCount = 0;
+		}
+
+		public static void ClearGenerators()
+        {
+			instance.generators.Clear();
+		}
 
         public static List<DriveItem> GetItems()
         {
@@ -110,13 +113,17 @@ namespace SatelliteStorage.DriveSystem
             if (searchItem != null)
             {
                 searchItem.stack += item.stack;
+				itemsCount += item.stack;
 				if (needSync) instance.SendItemSync(searchItem);
-                return true;
+				if (needSync) SendSyncItemsCount();
+				return true;
             }
 
             instance.items.Add(item);
+			itemsCount += item.stack;
 
-            if (needSync) instance.SendItemSync(item);
+			if (needSync) SendSyncItemsCount();
+			if (needSync) instance.SendItemSync(item);
 
             return true;
         }
@@ -135,7 +142,14 @@ namespace SatelliteStorage.DriveSystem
             return false;
         }
 
-        public static void SyncItem(DriveItem item)
+		public static int GetItemCount(DriveItem item)
+		{
+			DriveItem searchItem = instance.items.Find(v => v.type == item.type && v.prefix == item.prefix);
+			if (searchItem != null) return searchItem.stack;
+			return 0;
+		}
+
+		public static void SyncItem(DriveItem item)
         {
             DriveItem searchItem = instance.items.Find(v => v.type == item.type && v.prefix == item.prefix);
             if (searchItem != null)
@@ -150,6 +164,20 @@ namespace SatelliteStorage.DriveSystem
 
             checkRecipesRefresh = false;
         }
+
+		public static void SendSyncItemsCount(int to = -1)
+        {
+			if (Main.netMode != NetmodeID.Server)
+			{
+				return;
+			}
+
+			var packet = SatelliteStorage.instance.GetPacket();
+			packet.Write((byte)SatelliteStorage.MessageType.StorageItemsCount);
+			packet.Write7BitEncodedInt(itemsCount);
+			packet.Send(to);
+			packet.Close();
+		}
        
         private void SendItemSync(DriveItem item)
         {
@@ -183,21 +211,46 @@ namespace SatelliteStorage.DriveSystem
 			
 
             item.stack = stack;
-            searchItem.stack -= stack;
-            if (searchItem.stack <= 0) instance.items.Remove(searchItem);
 
-            instance.SendItemSync(searchItem);
+			int oldStackCount = searchItem.stack + 0;
+
+            searchItem.stack -= stack;
+
+			int takeItemsCount = stack;
+
+			if (searchItem.stack <= 0)
+			{
+				takeItemsCount = oldStackCount;
+				instance.items.Remove(searchItem);
+			}
+
+			if (Main.netMode == NetmodeID.Server || Main.netMode == NetmodeID.SinglePlayer) itemsCount -= takeItemsCount;
+			SendSyncItemsCount();
+
+			instance.SendItemSync(searchItem);
 
             return item;
         }
 
 		public static void SubItem(int type, int count)
-        {
+		{
 			DriveItem searchItem = instance.items.Find(v => v.type == type);
 			if (searchItem == null) return;
 
+			int oldStackCount = searchItem.stack + 0;
+
 			searchItem.stack -= count;
-			if (searchItem.stack <= 0) instance.items.Remove(searchItem);
+
+			int takeItemsCount = count;
+
+			if (searchItem.stack <= 0)
+			{
+				takeItemsCount = oldStackCount;
+				instance.items.Remove(searchItem);
+			}
+
+			if (Main.netMode == NetmodeID.Server || Main.netMode == NetmodeID.SinglePlayer) itemsCount -= takeItemsCount;
+			SendSyncItemsCount();
 
 			instance.SendItemSync(searchItem);
 		}
@@ -227,10 +280,6 @@ namespace SatelliteStorage.DriveSystem
 						RecipeItemsUses usesItem = new RecipeItemsUses();
 						usesItem.type = invItem.type;
 						usesItem.stack = invItem.stack;
-						//int difference = 0;
-						//difference = invItem.stack - playerInv[l].stack;
-						//SatelliteStorage.Debug("DIFF: " + difference);
-						//if (difference > 0) usesItem.stack -= difference;
 
 						if (hasItems[invItem.type] > recipeItems[invItem.type]) hasItems[invItem.type] = recipeItems[invItem.type];
 						if (usesItem.stack > recipeItems[usesItem.type]) usesItem.stack = recipeItems[usesItem.type];
@@ -284,8 +333,6 @@ namespace SatelliteStorage.DriveSystem
 				return true;
 			}
 
-			//NetMessage.SendData((int)SatelliteStorage.MessageType.RequestDriveChestItems);
-
 			if (player.sign >= 0)
 			{
 				SoundEngine.PlaySound(SoundID.MenuClose);
@@ -319,9 +366,10 @@ namespace SatelliteStorage.DriveSystem
 				ModPacket packet = SatelliteStorage.instance.GetPacket();
 				packet.Write((byte)SatelliteStorage.MessageType.RequestDriveChestItems);
 				packet.Write((byte)player.whoAmI);
+				packet.Write((byte)(checkPosition ? 1: 0));
+
 				packet.Send();
 				packet.Close();
-				if (checkPosition) UI.DriveChestUI.SetOpenedPosition(Main.LocalPlayer.position);
 			}
 
 			return true;
@@ -373,44 +421,13 @@ namespace SatelliteStorage.DriveSystem
 
 			int maxRecipes = Recipe.maxRecipes;
 
-			//int num = Main.availableRecipe[Main.focusRecipe];
-
 			availableRecipes.Clear();
-
-			/*
-			if (Main.guideItem.type > 0 && Main.guideItem.stack > 0 && Main.guideItem.Name != "")
-			{
-				for (int j = 0; j < maxRecipes && Main.recipe[j].createItem.type != 0; j++)
-				{
-
-					for (int k = 0; k < maxRequirements && Main.recipe[j].requiredItem[k].type != 0; k++)
-					{
-						if (!Main.guideItem.IsNotSameTypePrefixAndStack(Main.recipe[j].requiredItem[k]) || Main.recipe[j].useWood(Main.guideItem.type, Main.recipe[j].requiredItem[k].type) || Main.recipe[j].useSand(Main.guideItem.type, Main.recipe[j].requiredItem[k].type) || Main.recipe[j].useIronBar(Main.guideItem.type, Main.recipe[j].requiredItem[k].type) || Main.recipe[j].useFragment(Main.guideItem.type, Main.recipe[j].requiredItem[k].type) || Main.recipe[j].AcceptedByItemGroups(Main.guideItem.type, Main.recipe[j].requiredItem[k].type) || Main.recipe[j].usePressurePlate(Main.guideItem.type, Main.recipe[j].requiredItem[k].type))
-						{
-							Main.availableRecipe[Main.numAvailableRecipes] = j;
-							Main.numAvailableRecipes++;
-							break;
-						}
-					}
-				}
-			}
-			else
-			*/
-			
-			
 
 			Dictionary<int, int> dictionary = new Dictionary<int, int>();
 			Item[] array = null;
 			Item item = null;
 			array = Main.player[Main.myPlayer].inventory;
 
-			/*
-			oldPlayerInv = new Item[array.Length];
-
-            for (int i = 0; i < array.Length; i++) {
-				oldPlayerInv[i] = array[i].Clone();
-			}
-			*/
 
 			for (int l = 0; l < 58; l++)
 			{
@@ -444,47 +461,6 @@ namespace SatelliteStorage.DriveSystem
 				}
 			}
 
-			/*
-			if (Main.player[Main.myPlayer].chest != -1)
-			{
-				if (Main.player[Main.myPlayer].chest > -1)
-				{
-					array = Main.chest[Main.player[Main.myPlayer].chest].item;
-				}
-				else if (Main.player[Main.myPlayer].chest == -2)
-				{
-					array = Main.player[Main.myPlayer].bank.item;
-				}
-				else if (Main.player[Main.myPlayer].chest == -3)
-				{
-					array = Main.player[Main.myPlayer].bank2.item;
-				}
-				else if (Main.player[Main.myPlayer].chest == -4)
-				{
-					array = Main.player[Main.myPlayer].bank3.item;
-				}
-				else if (Main.player[Main.myPlayer].chest == -5)
-				{
-					array = Main.player[Main.myPlayer].bank4.item;
-				}
-				for (int m = 0; m < 40; m++)
-				{
-					item = array[m];
-					if (item != null && item.stack > 0)
-					{
-						if (dictionary.ContainsKey(item.netID))
-						{
-							dictionary[item.netID] += item.stack;
-						}
-						else
-						{
-							dictionary[item.netID] = item.stack;
-						}
-					}
-				}
-			}
-			*/
-
 			for (int n = 0; n < maxRecipes && Main.recipe[n].createItem.type != 0; n++)
 			{
 				bool flag = true;
@@ -510,16 +486,7 @@ namespace SatelliteStorage.DriveSystem
 						}
 						int num5 = item.stack;
 						bool flag2 = false;
-						/*
-						foreach (int key in dictionary.Keys)
-						{
-							if (Main.recipe[n].useWood(key, item.type) || Main.recipe[n].useSand(key, item.type) || Main.recipe[n].useIronBar(key, item.type) || Main.recipe[n].useFragment(key, item.type) || Main.recipe[n].AcceptedByItemGroups(key, item.type) || Main.recipe[n].usePressurePlate(key, item.type))
-							{
-								num5 -= dictionary[key];
-								flag2 = true;
-							}
-						}
-						*/
+
 						if (!flag2 && dictionary.ContainsKey(item.type))
 						{
 							num5 -= dictionary[item.type];
@@ -547,7 +514,6 @@ namespace SatelliteStorage.DriveSystem
 				{
 					if (mouseItemType > -1 && Main.recipe[n].createItem.type == mouseItemType)
                     {
-						//Main.focusRecipe = Main.numAvailableRecipes;
 
 					}
 
