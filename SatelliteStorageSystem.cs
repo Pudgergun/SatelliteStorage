@@ -9,7 +9,6 @@ using Terraria.ID;
 using log4net;
 using SatelliteStorage.DriveSystem;
 using Terraria.GameContent.Achievements;
-using static IL.Terraria.Recipe;
 using System;
 
 namespace SatelliteStorage

@@ -6,6 +6,8 @@ using Terraria.IO;
 using Terraria.ModLoader;
 using Terraria.WorldBuilding;
 using System;
+using Terraria.Localization;
+using Terraria.GameContent.ItemDropRules;
 
 namespace SatelliteStorage.Tiles
 {
@@ -23,13 +25,10 @@ namespace SatelliteStorage.Tiles
 			Main.tileSolid[Type] = true;
 			Main.tileBlockLight[Type] = true;
 
-			ModTranslation name = CreateMapEntryName();
-			name.SetDefault("QuartzOre");
-			AddMapEntry(new Color(152, 171, 198), name);
+			AddMapEntry(new Color(152, 171, 198), Language.GetText("ItemName.QuartzOre"));
 
 			DustType = 84;
-			ItemDrop = ModContent.ItemType<Items.QuartzShard>();
-
+			ItemDropRule.Common(ModContent.ItemType<Items.QuartzShard>());
 			HitSound = SoundID.Tink;
 		}
 	}

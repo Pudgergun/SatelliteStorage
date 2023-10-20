@@ -28,10 +28,8 @@ namespace SatelliteStorage.Tiles
 
 			DustType = DustID.BlueCrystalShard;
 
-			ContainerName.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.UITitles.DriveChest"));
-
-			ModTranslation name = CreateMapEntryName();
-			name.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.UITitles.DriveChest"));
+			LocalizedText name = CreateMapEntryName();
+			name.Format(Language.GetTextValue("Mods.SatelliteStorage.UITitles.DriveChest"));
 
 			AddMapEntry(new Color(73, 137, 201), name, MapName);
 

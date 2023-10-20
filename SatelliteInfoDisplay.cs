@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,17 +13,13 @@ namespace SatelliteStorage
     {
 		private string ItemsCounterText;
 
-		public override void SetStaticDefaults()
-		{
-			InfoName.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.Common.ItemsCounter"));
-		}
 
 		public override bool Active()
 		{
 			return Terraria.Main.LocalPlayer.GetModPlayer<SatelliteDisplayPlayer>().showItemsCount;
 		}
 
-		public override string DisplayValue()
+        public override string DisplayValue(ref Color displayColor, ref Color displayShadowColor)
 		{
 			string count = SatelliteStorage.itemsCount.ToString("##,##0");
 

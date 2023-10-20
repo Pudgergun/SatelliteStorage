@@ -15,7 +15,7 @@ namespace SatelliteStorage.Items
 
 		public override void SetStaticDefaults()
 		{
-			Tooltip.SetDefault("{$CommonItemTooltip.RightClickToOpen}"); 
+			Tooltip.Format("{$CommonItemTooltip.RightClickToOpen}");
 
 			ItemID.Sets.IsFishingCrate[Type] = true;
 

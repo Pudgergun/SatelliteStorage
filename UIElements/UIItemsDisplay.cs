@@ -83,7 +83,7 @@ namespace SatelliteStorage.UIElements
 			});
 
 
-			OnMouseDown += (UIMouseEvent evt, UIElement listeningElement) =>
+			OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) =>
 			{
 				Player player = Main.LocalPlayer;
 				Item mouseItem = player.inventory[58];
@@ -331,7 +331,7 @@ namespace SatelliteStorage.UIElements
 			uIPanel.OnMouseOut += Hover_OnMouseOut;
 			DynamicItemCollection item = (_itemGrid = new DynamicItemCollection());
 
-			item.OnMouseDown += (UIMouseEvent evt, UIElement listeningElement) =>
+			item.OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) =>
 			{
 				if (Main.keyState.IsKeyDown(Keys.LeftShift) || Main.keyState.IsKeyDown(Keys.RightShift))
                 {
@@ -454,7 +454,7 @@ namespace SatelliteStorage.UIElements
 				VAlign = 0.5f,
 				HAlign = 0f
 			};
-			uIImageButton.OnClick += Click_SearchArea;
+			uIImageButton.OnLeftClick += Click_SearchArea;
 			uIImageButton.SetHoverImage(Main.Assets.Request<Texture2D>("Images/UI/Bestiary/Button_Search_Border", (AssetRequestMode)1));
 			uIImageButton.SetVisibility(1f, 1f);
 			uIImageButton.SetSnapPoint("CreativeInfinitesSearch", 0);
@@ -479,13 +479,13 @@ namespace SatelliteStorage.UIElements
 				Left = new StyleDimension(0f, 0f),
 				IgnoresMouseInteraction = true
 			});
-			uIPanel.OnClick += Click_SearchArea;
+			uIPanel.OnLeftClick += Click_SearchArea;
 			uISearchBar.OnContentsChanged += OnSearchContentsChanged;
 			uIPanel.Append(uISearchBar);
 			uISearchBar.OnStartTakingInput += OnStartTakingInput;
 			uISearchBar.OnEndTakingInput += OnEndTakingInput;
 			uISearchBar.OnNeedingVirtualKeyboard += OpenVirtualKeyboardWhenNeeded;
-			uISearchBar.OnCancledTakingInput += OnCancledInput;
+			uISearchBar.OnCanceledTakingInput += OnCancledInput;
 			UIImageButton uIImageButton2 = new UIImageButton(Main.Assets.Request<Texture2D>("Images/UI/SearchCancel", (AssetRequestMode)1))
 			{
 				HAlign = 1f,
@@ -493,7 +493,7 @@ namespace SatelliteStorage.UIElements
 				Left = new StyleDimension(-2f, 0f)
 			};
 			uIImageButton2.OnMouseOver += searchCancelButton_OnMouseOver;
-			uIImageButton2.OnClick += searchCancelButton_OnClick;
+			uIImageButton2.OnLeftClick += searchCancelButton_OnClick;
 			uIPanel.Append(uIImageButton2);
 		}
 
@@ -529,9 +529,8 @@ namespace SatelliteStorage.UIElements
 			}
 		}
 
-		public override void Click(UIMouseEvent evt)
+		public override void LeftClick(UIMouseEvent evt)
 		{
-			base.Click(evt);
 			AttemptStoppingUsingSearchbar(evt);
 		}
 

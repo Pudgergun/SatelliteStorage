@@ -26,10 +26,8 @@ namespace SatelliteStorage.Tiles
 			Main.tileOreFinderPriority[Type] = 500;
 			TileID.Sets.DisableSmartCursor[Type] = true;
 
-			ContainerName.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.ItemName." + item_name + "Item"));
-
-			ModTranslation name = CreateMapEntryName();
-			name.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.ItemName." + item_name+ "Item"));
+			LocalizedText name = CreateMapEntryName();
+			name.Format(Language.GetTextValue("Mods.SatelliteStorage.ItemName." + item_name+ "Item"));
 			AddMapEntry(new Color(108, 65, 138), name, MapName);
 
 
@@ -143,15 +141,20 @@ namespace SatelliteStorage.Tiles
 			int frameYOffset = Main.tileFrame[Type] * AnimationFrameHeight;
 
 			
-			int uniqueAnimationFrame = Main.tileFrame[Type] + i;
+			//int uniqueAnimationFrame = Main.tileFrame[Type] + i;
 
+			/*
 			if (i % 2 == 0)
 				uniqueAnimationFrame += 1;
+            if (i % 3 == 0)
+                uniqueAnimationFrame += 2;
+            if (i % 4 == 0)
+                uniqueAnimationFrame += 3;
+			*/
 
+			//uniqueAnimationFrame %= 4;
 
-			uniqueAnimationFrame %= 4;
-
-			frameYOffset = uniqueAnimationFrame * AnimationFrameHeight;
+			//frameYOffset = uniqueAnimationFrame * AnimationFrameHeight;
 			
 
 			spriteBatch.Draw(

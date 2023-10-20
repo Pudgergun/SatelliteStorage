@@ -105,7 +105,7 @@ namespace SatelliteStorage.UIElements
 			uIPanel.OnMouseOut += Hover_OnMouseOut;
 			DynamicItemCollection item = (_itemGrid = new DynamicItemCollection());
 
-			item.OnMouseDown += (UIMouseEvent evt, UIElement listeningElement) =>
+			item.OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) =>
 			{
 				return;
 			};
@@ -205,9 +205,8 @@ namespace SatelliteStorage.UIElements
 			base.Draw(spriteBatch);
 		}
 
-		public override void Click(UIMouseEvent evt)
+		public override void LeftClick(UIMouseEvent evt)
 		{
-			base.Click(evt);
 			AttemptStoppingUsingSearchbar(evt);
 		}
 

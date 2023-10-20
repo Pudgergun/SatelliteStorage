@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Terraria;
 using Terraria.DataStructures;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
@@ -25,8 +26,8 @@ namespace SatelliteStorage.Tiles
 			TileObjectData.newTile.StyleHorizontal = true;
 			TileObjectData.addTile(Type);
 
-			ModTranslation name = CreateMapEntryName();
-			name.SetDefault("");
+			LocalizedText name = CreateMapEntryName();
+			name.Format("");
 			AddMapEntry(new Color(133, 50, 168), name);
 		}
 

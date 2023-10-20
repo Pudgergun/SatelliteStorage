@@ -44,10 +44,10 @@ namespace SatelliteStorage.UIElements
 			BorderColor = Color.White;
 		}
 
-		public override void Click(UIMouseEvent evt)
+
+        public override void LeftClick(UIMouseEvent evt)
 		{
 			Focus();
-			base.Click(evt);
 		}
 
 		public override void RightClick(UIMouseEvent evt)

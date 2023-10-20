@@ -193,7 +193,7 @@ namespace SatelliteStorage.UI
 				SoundEngine.PlaySound(SoundID.MenuTick);
 			};
 			
-			OnMouseDown += (UIMouseEvent evt, UIElement listeningElement) =>
+			OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) =>
 			{
 				if (craftOnMouseRecipe > -1)
                 {
@@ -203,7 +203,7 @@ namespace SatelliteStorage.UI
 				}
 			};
 
-			OnMouseUp += (UIMouseEvent evt, UIElement listeningElement) =>
+			OnLeftMouseUp += (UIMouseEvent evt, UIElement listeningElement) =>
 			{
 				isMouseDownOnCraftItem = false;
 			};

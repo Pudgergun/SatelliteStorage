@@ -10,6 +10,7 @@ using Terraria.Localization;
 using Terraria.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.ComponentModel;
 
 namespace SatelliteStorage.Tiles
 {
@@ -24,11 +25,9 @@ namespace SatelliteStorage.Tiles
 			TileID.Sets.DisableSmartCursor[Type] = true;
 
 			DustType = DustID.Firefly;
-
-			ContainerName.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.UITitles.Sputnik"));
-
-			ModTranslation name = CreateMapEntryName();
-			name.SetDefault(Language.GetTextValue("Mods.SatelliteStorage.UITitles.Sputnik"));
+			
+			LocalizedText name = CreateMapEntryName();
+			name.Format(Language.GetTextValue("Mods.SatelliteStorage.UITitles.Sputnik"));
 			AddMapEntry(new Color(108, 65, 138), name, MapName);
 			
 			TileObjectData.newTile.CopyFrom(TileObjectData.Style6x3);

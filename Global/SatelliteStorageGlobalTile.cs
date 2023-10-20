@@ -15,7 +15,7 @@ namespace SatelliteStorage.Global
 {
     class SatelliteStorageGlobalTile : GlobalTile
     {
-        public override bool Drop(int i, int j, int type)
+        public override void KillTile(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
         {
             if (Main.netMode == NetmodeID.Server || Main.netMode == NetmodeID.SinglePlayer)
             {
@@ -24,12 +24,11 @@ namespace SatelliteStorage.Global
                     if (new Random().Next(0, 100) > 100)
                     {
                         Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 32, 32, ModContent.ItemType<Items.QuartzShard>());
-                        return false;
+                        noItem = true;
                     }
                 }
             }
-
-            return base.Drop(i, j, type);
         }
+
     }
 }

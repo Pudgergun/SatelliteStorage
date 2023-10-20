@@ -500,11 +500,11 @@ namespace SatelliteStorage.DriveSystem
 				}
 				if (flag)
 				{
-					bool num6 = !Main.recipe[n].HasCondition(Recipe.Condition.NearWater) || Main.player[Main.myPlayer].adjWater || Main.player[Main.myPlayer].adjTile[172];
-					bool flag3 = !Main.recipe[n].HasCondition(Recipe.Condition.NearHoney) || Main.recipe[n].HasCondition(Recipe.Condition.NearHoney) == Main.player[Main.myPlayer].adjHoney;
-					bool flag4 = !Main.recipe[n].HasCondition(Recipe.Condition.NearLava) || Main.recipe[n].HasCondition(Recipe.Condition.NearLava) == Main.player[Main.myPlayer].adjLava;
-					bool flag5 = !Main.recipe[n].HasCondition(Recipe.Condition.InSnow) || Main.player[Main.myPlayer].ZoneSnow;
-					bool flag6 = !Main.recipe[n].HasCondition(Recipe.Condition.InGraveyardBiome) || Main.player[Main.myPlayer].ZoneGraveyard;
+                    bool num6 = !Main.recipe[n].HasCondition(Condition.NearWater) || Main.player[Main.myPlayer].adjWater || Main.player[Main.myPlayer].adjTile[172];
+					bool flag3 = !Main.recipe[n].HasCondition(Condition.NearHoney) || Main.recipe[n].HasCondition(Condition.NearHoney) == Main.player[Main.myPlayer].adjHoney;
+					bool flag4 = !Main.recipe[n].HasCondition(Condition.NearLava) || Main.recipe[n].HasCondition(Condition.NearLava) == Main.player[Main.myPlayer].adjLava;
+					bool flag5 = !Main.recipe[n].HasCondition(Condition.InSnow) || Main.player[Main.myPlayer].ZoneSnow;
+					bool flag6 = !Main.recipe[n].HasCondition(Condition.InGraveyard) || Main.player[Main.myPlayer].ZoneGraveyard;
 					if (!(num6 && flag3 && flag4 && flag5 && flag6))
 					{
 						flag = false;

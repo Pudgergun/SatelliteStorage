@@ -1,0 +1,153 @@
+Common: {
+	GeneratorDropsTitle: Generated items:
+	ItemsCounter: Items Counter
+	ItemsCounterCount: items in storage
+	CantUseWithoutSputnik: No available Satellite
+}
+
+ChanceNames: {
+	_0: Very high chance
+	_1: High chance
+	_2: Medium chance
+	_3: Low chance
+	_4: Very low chance
+}
+
+UITitles: {
+	DriveChest: Network Terminal
+	Sputnik: Satellite
+	SputnikItem: Satellite
+	DriveChestSearch: Search
+	DriveChestRecipes: Recipes
+	DriveChestCraft: Crafting
+}
+
+InfoDisplays.SatelliteInfoDisplay.DisplayName: Items Counter
+
+Tiles: {
+	BaseItemsGeneratorTile.MapEntry: Base Items Generator
+	ChlorophyteGeneratorTile.MapEntry: Chlorophyte Generator
+	DriveChestTile.MapEntry: Drive Chest Tile
+	HallowedGeneratorTile.MapEntry: Hallowed Generator
+	HellstoneGeneratorTile.MapEntry: Hellstone Generator
+	LuminiteGeneratorTile.MapEntry: Luminite Generator
+	MeteoriteGeneratorTile.MapEntry: Meteorite Generator
+	PowerGeneratorTile.MapEntry: Power Generator
+	QuartzCrateTile.MapEntry: Quartz Crate
+	ShroomiteGeneratorTile.MapEntry: Shroomite Generator
+	SoulGeneratorTile.MapEntry: Soul Generator
+	SpectreGeneratorTile.MapEntry: Spectre Generator
+	SputnikTile.MapEntry: Sputnik
+}
+
+Items: {
+	QuartzAxe: {
+		DisplayName: Quartz Axe
+		Tooltip: ""
+	}
+
+	QuartzCrateItem: {
+		DisplayName: Quartz Crate
+		Tooltip: ""
+	}
+
+	QuartzModule: {
+		DisplayName: Quartz Module
+		Tooltip: ""
+	}
+
+	QuartzPickaxe: {
+		DisplayName: Quartz Pickaxe
+		Tooltip: ""
+	}
+
+	QuartzShard: {
+		DisplayName: Quartz Shard
+		Tooltip: ""
+	}
+
+	QuartzSword: {
+		DisplayName: Quartz Sword
+		Tooltip: ""
+	}
+
+	ShroomiteGeneratorItem: {
+		DisplayName: Shroomite Generator
+		Tooltip: ""
+	}
+
+	SoulBar: {
+		DisplayName: Soul Bar
+		Tooltip: ""
+	}
+
+	SoulGeneratorItem: {
+		DisplayName: Soul Generator
+		Tooltip: ""
+	}
+
+	SpectreGeneratorItem: {
+		DisplayName: Spectre Generator
+		Tooltip: ""
+	}
+
+	SputnikItem: {
+		DisplayName: Sputnik
+		Tooltip: ""
+	}
+
+	BaseItemsGeneratorItem: {
+		DisplayName: Base Items Generator
+		Tooltip: ""
+	}
+
+	ChlorophyteGeneratorItem: {
+		DisplayName: Chlorophyte Generator
+		Tooltip: ""
+	}
+
+	DriveChestItem: {
+		DisplayName: Drive Chest
+		Tooltip: ""
+	}
+
+	DriveChestRemoteItem: {
+		DisplayName: Drive Chest Remote
+		Tooltip: ""
+	}
+
+	HallowedGeneratorItem: {
+		DisplayName: Hallowed Generator
+		Tooltip: ""
+	}
+
+	HellstoneGeneratorItem: {
+		DisplayName: Hellstone Generator
+		Tooltip: ""
+	}
+
+	ItemsCountAccessoryItem: {
+		DisplayName: Items Count Accessory
+		Tooltip: ""
+	}
+
+	LuminiteGeneratorItem: {
+		DisplayName: Luminite Generator
+		Tooltip: ""
+	}
+
+	MeteoriteGeneratorItem: {
+		DisplayName: Meteorite Generator
+		Tooltip: ""
+	}
+
+	PowerBar: {
+		DisplayName: Power Bar
+		Tooltip: ""
+	}
+
+	PowerGeneratorItem: {
+		DisplayName: Power Generator
+		Tooltip: ""
+	}
+}
