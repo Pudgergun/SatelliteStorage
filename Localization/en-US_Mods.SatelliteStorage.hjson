@@ -25,14 +25,14 @@ UITitles: {
 InfoDisplays.SatelliteInfoDisplay.DisplayName: Items Counter
 
 Tiles: {
-	BaseItemsGeneratorTile.MapEntry: Base Items Generator
+	BaseItemsGeneratorTile.MapEntry: Item Generator
 	ChlorophyteGeneratorTile.MapEntry: Chlorophyte Generator
-	DriveChestTile.MapEntry: Drive Chest Tile
+	DriveChestTile.MapEntry: Network Terminal
 	HallowedGeneratorTile.MapEntry: Hallowed Generator
 	HellstoneGeneratorTile.MapEntry: Hellstone Generator
 	LuminiteGeneratorTile.MapEntry: Luminite Generator
 	MeteoriteGeneratorTile.MapEntry: Meteorite Generator
-	PowerGeneratorTile.MapEntry: Power Generator
+	PowerGeneratorTile.MapEntry: Powerful Generator
 	QuartzCrateTile.MapEntry: Quartz Crate
 	ShroomiteGeneratorTile.MapEntry: Shroomite Generator
 	SoulGeneratorTile.MapEntry: Soul Generator
@@ -52,7 +52,7 @@ Items: {
 	}
 
 	QuartzModule: {
-		DisplayName: Quartz Module
+		DisplayName: Network Module
 		Tooltip: ""
 	}
 
@@ -93,11 +93,11 @@ Items: {
 
 	SputnikItem: {
 		DisplayName: Sputnik
-		Tooltip: ""
+		Tooltip: Can be placed only in the Space
 	}
 
 	BaseItemsGeneratorItem: {
-		DisplayName: Base Items Generator
+		DisplayName: Item Generator
 		Tooltip: ""
 	}
 
@@ -107,13 +107,13 @@ Items: {
 	}
 
 	DriveChestItem: {
-		DisplayName: Drive Chest
-		Tooltip: ""
+		DisplayName: Network Terminal
+		Tooltip: Gives access to the infinite storage from the Satellite!
 	}
 
 	DriveChestRemoteItem: {
-		DisplayName: Drive Chest Remote
-		Tooltip: ""
+		DisplayName: Network Controller
+		Tooltip: Gives access to the infinite storage from the Satellite from anywhere!
 	}
 
 	HallowedGeneratorItem: {
@@ -127,8 +127,8 @@ Items: {
 	}
 
 	ItemsCountAccessoryItem: {
-		DisplayName: Items Count Accessory
-		Tooltip: ""
+		DisplayName: Items Counter
+		Tooltip: Shows items count in storage
 	}
 
 	LuminiteGeneratorItem: {
@@ -147,7 +147,7 @@ Items: {
 	}
 
 	PowerGeneratorItem: {
-		DisplayName: Power Generator
+		DisplayName: Powerful Generator
 		Tooltip: ""
 	}
 }

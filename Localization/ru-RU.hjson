@@ -1,0 +1,139 @@
+Common: {
+	// GeneratorDropsTitle: 生成的物品:
+	// CantUseWithoutSputnik: 没有可用的人造卫星
+	// Lang: zu
+}
+
+ChanceNames: {
+	// _0: 极高几率
+	// _1: 高几率
+	// _2: 中等几率
+	// _3: 低几率
+	// _4: 极低几率
+}
+
+UITitles: {
+	// DriveChest: 网络终端
+	// Sputnik: 人造卫星
+	// SputnikItem: 人造卫星
+	// DriveChestSearch: 搜索
+	// DriveChestRecipes: 合成表
+	// DriveChestCraft: 制造
+}
+
+Tiles: {
+	// BaseItemsGeneratorTile.MapEntry: 物品生成仪
+	// ChlorophyteGeneratorTile.MapEntry: 叶绿生成仪
+	// DriveChestTile.MapEntry: 网络终端
+	// HallowedGeneratorTile.MapEntry: 神圣生成仪
+	// HellstoneGeneratorTile.MapEntry: 狱石生成仪
+	// LuminiteGeneratorTile.MapEntry: 叶明生成仪
+	// MeteoriteGeneratorTile.MapEntry: 陨石生成仪
+	// PowerGeneratorTile.MapEntry: 强力生成仪
+	// ShroomiteGeneratorTile.MapEntry: 蘑菇生成仪
+	// SoulGeneratorTile.MapEntry: 灵魂生成仪
+	// SpectreGeneratorTile.MapEntry: 幽冥生成仪
+	// SputnikTile.MapEntry: 人造卫星
+}
+
+Items: {
+	QuartzAxe: {
+		// DisplayName: 石英斧
+		// Tooltip: ""
+	}
+
+	QuartzModule: {
+		// DisplayName: 网络模块
+		// Tooltip: ""
+	}
+
+	QuartzPickaxe: {
+		// DisplayName: 石英镐
+		// Tooltip: ""
+	}
+
+	QuartzShard: {
+		// DisplayName: 石英碎片
+		// Tooltip: ""
+	}
+
+	QuartzSword: {
+		// DisplayName: 石英剑
+		// Tooltip: ""
+	}
+
+	ShroomiteGeneratorItem: {
+		// DisplayName: 蘑菇生成仪
+		// Tooltip: ""
+	}
+
+	SoulBar: {
+		// DisplayName: 灵魂锭
+		// Tooltip: ""
+	}
+
+	SoulGeneratorItem: {
+		// DisplayName: 灵魂生成仪
+		// Tooltip: ""
+	}
+
+	SpectreGeneratorItem: {
+		// DisplayName: 幽冥生成仪
+		// Tooltip: ""
+	}
+
+	SputnikItem: {
+		// DisplayName: 人造卫星
+		// Tooltip: 只能放置在太空中
+	}
+
+	BaseItemsGeneratorItem: {
+		// DisplayName: 物品生成仪
+		// Tooltip: ""
+	}
+
+	ChlorophyteGeneratorItem: {
+		// DisplayName: 叶绿生成仪
+		// Tooltip: ""
+	}
+
+	DriveChestItem: {
+		// DisplayName: 网络终端
+		// Tooltip: 允许从人造卫星访问无限存储空间!
+	}
+
+	DriveChestRemoteItem: {
+		// DisplayName: 网络控制器
+		// Tooltip: 允许从任何地方访问人造卫星的无限存储空间!
+	}
+
+	HallowedGeneratorItem: {
+		// DisplayName: 神圣生成仪
+		// Tooltip: ""
+	}
+
+	HellstoneGeneratorItem: {
+		// DisplayName: 狱石生成仪
+		// Tooltip: ""
+	}
+
+	LuminiteGeneratorItem: {
+		// DisplayName: 叶明生成仪
+		// Tooltip: ""
+	}
+
+	MeteoriteGeneratorItem: {
+		// DisplayName: 陨石生成仪
+		// Tooltip: ""
+	}
+
+	PowerBar: {
+		// DisplayName: 能量锭
+		// Tooltip: ""
+	}
+
+	PowerGeneratorItem: {
+		// DisplayName: 强力生成仪
+		// Tooltip: ""
+	}
+}

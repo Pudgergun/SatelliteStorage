@@ -1,0 +1,153 @@
+Common: {
+	GeneratorDropsTitle: Генерируемые предметы:
+	ItemsCounter: Счетчик предметов
+	ItemsCounterCount: предметов в системе
+	CantUseWithoutSputnik: Отсутствует точка для подключения
+}
+
+ChanceNames: {
+	_0: Очень высокий шанс
+	_1: Высокий шанс
+	_2: Средний шанс
+	_3: Низкий шанс
+	_4: Очень низкий шанс
+}
+
+UITitles: {
+	DriveChest: Терминал
+	Sputnik: Спутник
+	SputnikItem: Спутник
+	DriveChestSearch: Поиск
+	DriveChestRecipes: Рецепты
+	DriveChestCraft: Создание
+}
+
+InfoDisplays.SatelliteInfoDisplay.DisplayName: Счетчик предметов
+
+Tiles: {
+	BaseItemsGeneratorTile.MapEntry: Генератор предметов
+	ChlorophyteGeneratorTile.MapEntry: Хлорофитовый генератор
+	DriveChestTile.MapEntry: Терминал
+	HallowedGeneratorTile.MapEntry: Святой генератор
+	HellstoneGeneratorTile.MapEntry: Генератор из адского камня
+	LuminiteGeneratorTile.MapEntry: Люминитовый генератор
+	MeteoriteGeneratorTile.MapEntry: Метеоритовый генератор
+	PowerGeneratorTile.MapEntry: Генератор из слитка силы
+	QuartzCrateTile.MapEntry: Кварцевый ящик
+	ShroomiteGeneratorTile.MapEntry: Грибной генератор
+	SoulGeneratorTile.MapEntry: Генератор из слитка душ
+	SpectreGeneratorTile.MapEntry: Спектральный генератор
+	SputnikTile.MapEntry: Спутник
+}
+
+Items: {
+	QuartzAxe: {
+		DisplayName: Кварцевый топор
+		Tooltip: ""
+	}
+
+	QuartzCrateItem: {
+		DisplayName: Кварцевый ящик
+		Tooltip: ""
+	}
+
+	QuartzModule: {
+		DisplayName: Сетевой модуль
+		Tooltip: ""
+	}
+
+	QuartzPickaxe: {
+		DisplayName: Кварцевая кирка
+		Tooltip: ""
+	}
+
+	QuartzShard: {
+		DisplayName: Осколок кварца
+		Tooltip: ""
+	}
+
+	QuartzSword: {
+		DisplayName: Кварцевый меч
+		Tooltip: ""
+	}
+
+	ShroomiteGeneratorItem: {
+		DisplayName: Грибной генератор
+		Tooltip: ""
+	}
+
+	SoulBar: {
+		DisplayName: Слиток душ
+		Tooltip: ""
+	}
+
+	SoulGeneratorItem: {
+		DisplayName: Генератор из слитка душ
+		Tooltip: ""
+	}
+
+	SpectreGeneratorItem: {
+		DisplayName: Спектральный генератор
+		Tooltip: ""
+	}
+
+	SputnikItem: {
+		DisplayName: Спутник
+		Tooltip: Можно установить только в космосе
+	}
+
+	BaseItemsGeneratorItem: {
+		DisplayName: Генератор предметов
+		Tooltip: ""
+	}
+
+	ChlorophyteGeneratorItem: {
+		DisplayName: Хлорофитовый генератор
+		Tooltip: ""
+	}
+
+	DriveChestItem: {
+		DisplayName: Терминал
+		Tooltip: Позволяет получить доступ к бесконечному складу на спутнике!
+	}
+
+	DriveChestRemoteItem: {
+		DisplayName: Пульт
+		Tooltip: Позволяет получить доступ к бесконечному складу на спутнике!
+	}
+
+	HallowedGeneratorItem: {
+		DisplayName: Святой генератор
+		Tooltip: ""
+	}
+
+	HellstoneGeneratorItem: {
+		DisplayName: Генератор из адского камня
+		Tooltip: ""
+	}
+
+	ItemsCountAccessoryItem: {
+		DisplayName: Счетчик предметов
+		Tooltip: Показывает количество предметов в системе спутника
+	}
+
+	LuminiteGeneratorItem: {
+		DisplayName: Люминитовый генератор
+		Tooltip: ""
+	}
+
+	MeteoriteGeneratorItem: {
+		DisplayName: Метеоритовый генератор
+		Tooltip: ""
+	}
+
+	PowerBar: {
+		DisplayName: Слиток силы
+		Tooltip: ""
+	}
+
+	PowerGeneratorItem: {
+		DisplayName: Генератор из слитка силы
+		Tooltip: ""
+	}
+}
