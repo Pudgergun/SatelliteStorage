@@ -27,8 +27,8 @@ namespace SatelliteStorage.Tiles
 			TileID.Sets.DisableSmartCursor[Type] = true;
 
 			LocalizedText name = CreateMapEntryName();
-			name.Format(Language.GetTextValue("Mods.SatelliteStorage.ItemName." + item_name+ "Item"));
-			AddMapEntry(new Color(108, 65, 138), name, MapName);
+			name.Format(Language.GetTextValue("Mods.SatelliteStorage.Tiles." + item_name+ "Tile"));
+			AddMapEntry(new Color(108, 65, 138), name);
 
 
 			TileObjectData.newTile.CopyFrom(TileObjectData.Style2xX);
@@ -60,11 +60,6 @@ namespace SatelliteStorage.Tiles
 			num = 1;
 		}
 
-		public static string MapName(string name, int i, int j)
-		{
-			return Language.GetTextValue("Mods.SatelliteStorage.ItemName.BaseItemsGeneratorItem");
-		}
-
 		public override void KillMultiTile(int i, int j, int frameX, int frameY)
 		{
 			if (Main.netMode == NetmodeID.SinglePlayer || Main.netMode == NetmodeID.Server)
@@ -72,7 +67,7 @@ namespace SatelliteStorage.Tiles
 				DriveSystem.DriveChestSystem.SubGenerator(generatorType);
 			}
 
-			Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 32, 32, itemDrop);
+			//Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 32, 32, itemDrop);
 		}
 
 		public override void MouseOver(int i, int j)

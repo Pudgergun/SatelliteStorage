@@ -48,13 +48,18 @@ namespace SatelliteStorage
         public static SatelliteStorage instance;
         public DriveChestSystem driveChestSystem;
         public static int itemsCount => DriveChestSystem.itemsCount;
-        private Dictionary<int, UI.BaseUIState> uidict = new Dictionary<int, UI.BaseUIState>();
 
         public static bool TakeDriveChestItemSended = false;
         public static bool AddDriveChestItemSended = false;
 
         public const int GeneratorsInterval = 20000;
         public const int ModVersion = 1;
+
+        public static Dictionary<int, DriveItem> AutoImportItems = new Dictionary<int, DriveItem>();
+
+
+        private Dictionary<int, UI.BaseUIState> uidict = new Dictionary<int, UI.BaseUIState>();
+
 
         internal enum MessageType : byte
         {

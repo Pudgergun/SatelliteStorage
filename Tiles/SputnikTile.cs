@@ -27,8 +27,8 @@ namespace SatelliteStorage.Tiles
 			DustType = DustID.Firefly;
 			
 			LocalizedText name = CreateMapEntryName();
-			name.Format(Language.GetTextValue("Mods.SatelliteStorage.UITitles.Sputnik"));
-			AddMapEntry(new Color(108, 65, 138), name, MapName);
+			name.Format(Language.GetTextValue("Mods.SatelliteStorage.Tiles.SputnikTile"));
+			AddMapEntry(new Color(108, 65, 138), name);
 			
 			TileObjectData.newTile.CopyFrom(TileObjectData.Style6x3);
 			TileObjectData.newTile.Origin = new Point16(2, 1);
@@ -55,14 +55,9 @@ namespace SatelliteStorage.Tiles
 			num = 1;
 		}
 
-		public static string MapName(string name, int i, int j)
-		{
-			return Language.GetTextValue("Mods.SatelliteStorage.ItemName.SputnikItem");
-		}
-
 		public override void KillMultiTile(int i, int j, int frameX, int frameY)
 		{
-			Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 32, 32, ModContent.ItemType<Items.SputnikItem>());
+			//Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 32, 32, ModContent.ItemType<Items.SputnikItem>());
 
 			DriveSystem.DriveChestSystem.isSputnikPlaced = false;
 			SatelliteStorage.SyncIsSputnikPlacedToClients();

@@ -29,7 +29,7 @@ namespace SatelliteStorage.UIElements
 		private List<int> _itemIdsAvailableTotal;
 		private List<int> _itemIdsAvailableToShow;
 
-		private DynamicItemCollection _itemGrid;
+		private UIDynamicItemCollection _itemGrid;
 		private CreativeUnlocksTracker _lastTrackerCheckedForEdits;
 		private bool _showSacrificesInsteadOfInfinites;
 		private EntrySorter<int, ICreativeItemSortStep> _sorter;
@@ -131,7 +131,7 @@ namespace SatelliteStorage.UIElements
 			uIPanel.OnUpdate += Hover_OnUpdate;
 			uIPanel.OnMouseOver += Hover_OnMouseOver;
 			uIPanel.OnMouseOut += Hover_OnMouseOut;
-			DynamicItemCollection item = (_itemGrid = new DynamicItemCollection());
+			UIDynamicItemCollection item = (_itemGrid = new UIDynamicItemCollection());
 
 			item.OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) =>
 			{

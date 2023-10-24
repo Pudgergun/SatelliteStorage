@@ -28,6 +28,8 @@ namespace SatelliteStorage.DriveSystem
         public static bool checkRecipesRefresh = false;
 		public static int itemsCount = 0;
 
+		private static bool Debug_fillWithRandomItems = false;
+
         public DriveChestSystem()
         {
             instance = this;
@@ -37,6 +39,19 @@ namespace SatelliteStorage.DriveSystem
         {
             checkRecipesRefresh = false;
             instance.items = items;
+
+			//========= DEBUG
+			if (Debug_fillWithRandomItems)
+			{
+				Random rnd = new Random();
+				for (int i = 0; i < 1000; i++)
+				{
+					DriveItem itm = new DriveItem();
+					itm.SetType(i + 1).SetStack(1).SetPrefix(rnd.Next(1, 30));
+					instance.items.Add(itm);
+				}
+			}
+			//===========
 
 			foreach(DriveItem itm in items)
             {
@@ -200,10 +215,7 @@ namespace SatelliteStorage.DriveSystem
         {
             DriveItem searchItem = instance.items.Find(v => v.type == type && v.prefix == prefix);
             if (searchItem == null) return null;
-            Item item = new Item();
-            item.type = searchItem.type;
-            item.SetDefaults(item.type);
-            item.prefix = searchItem.prefix;
+            Item item = searchItem.ToItem();
 
             int stack = searchItem.stack;
 			if (count > 0) stack = count;

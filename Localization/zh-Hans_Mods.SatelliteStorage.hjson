@@ -1,7 +1,9 @@
 Common: {
 	GeneratorDropsTitle: 生成的物品:
+	// ItemsCounter: Items Counter
+	// ItemsCounterCount: items in storage
 	CantUseWithoutSputnik: 没有可用的人造卫星
-	Lang: zu
+	Lang: zh
 }
 
 ChanceNames: {
@@ -13,6 +15,7 @@ ChanceNames: {
 }
 
 UITitles: {
+	// AutoImport: Auto Import
 	DriveChest: 网络终端
 	Sputnik: 人造卫星
 	SputnikItem: 人造卫星
@@ -20,6 +23,8 @@ UITitles: {
 	DriveChestRecipes: 合成表
 	DriveChestCraft: 制造
 }
+
+// InfoDisplays.SatelliteInfoDisplay.DisplayName: Items Counter
 
 Tiles: {
 	BaseItemsGeneratorTile.MapEntry: 物品生成仪
@@ -30,6 +35,7 @@ Tiles: {
 	LuminiteGeneratorTile.MapEntry: 叶明生成仪
 	MeteoriteGeneratorTile.MapEntry: 陨石生成仪
 	PowerGeneratorTile.MapEntry: 强力生成仪
+	// QuartzCrateTile.MapEntry: Quartz Crate
 	ShroomiteGeneratorTile.MapEntry: 蘑菇生成仪
 	SoulGeneratorTile.MapEntry: 灵魂生成仪
 	SpectreGeneratorTile.MapEntry: 幽冥生成仪
@@ -40,6 +46,11 @@ Items: {
 	QuartzAxe: {
 		DisplayName: 石英斧
 		Tooltip: ""
+	}
+
+	QuartzCrateItem: {
+		// DisplayName: Quartz Crate
+		// Tooltip: ""
 	}
 
 	QuartzModule: {
@@ -117,6 +128,11 @@ Items: {
 		Tooltip: ""
 	}
 
+	ItemsCountAccessoryItem: {
+		// DisplayName: Items Counter
+		// Tooltip: Shows items count in storage
+	}
+
 	LuminiteGeneratorItem: {
 		DisplayName: 叶明生成仪
 		Tooltip: ""
@@ -136,4 +152,9 @@ Items: {
 		DisplayName: 强力生成仪
 		Tooltip: ""
 	}
+}
+
+Keybinds: {
+	// SearchItem.DisplayName: Search Item
+	// QuickOpen.DisplayName: Quick Open
 }

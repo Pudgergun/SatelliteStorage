@@ -27,7 +27,7 @@ namespace SatelliteStorage.Tiles
 			TileObjectData.addTile(Type);
 
 			LocalizedText name = CreateMapEntryName();
-			name.Format("");
+			name.Format(Language.GetTextValue("Mods.SatelliteStorage.Tiles.QuartzCrateTile"));
 			AddMapEntry(new Color(133, 50, 168), name);
 		}
 
@@ -38,7 +38,7 @@ namespace SatelliteStorage.Tiles
 
 		public override void KillMultiTile(int i, int j, int frameX, int frameY)
 		{
-			Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 32, 32, ModContent.ItemType<Items.QuartzCrateItem>());
+			//Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 32, 32, ModContent.ItemType<Items.QuartzCrateItem>());
 		}
 	}
 }

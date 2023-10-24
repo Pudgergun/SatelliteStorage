@@ -1,9 +1,14 @@
 ﻿using Microsoft.Xna.Framework;
+using SatelliteStorage.DriveSystem;
+using SatelliteStorage.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Terraria;
+using Terraria.Audio;
+using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
 
@@ -11,12 +16,9 @@ namespace SatelliteStorage
 {
     internal class SatelliteInfoDisplay : InfoDisplay
     {
-		private string ItemsCounterText;
-
-
 		public override bool Active()
 		{
-			return Terraria.Main.LocalPlayer.GetModPlayer<SatelliteDisplayPlayer>().showItemsCount;
+			return Main.LocalPlayer.GetModPlayer<SatelliteStoragePlayer>().showItemsCount;
 		}
 
         public override string DisplayValue(ref Color displayColor, ref Color displayShadowColor)
@@ -27,31 +29,6 @@ namespace SatelliteStorage
 				count = SatelliteStorage.itemsCount +"";
 
 			return $"{count} " + Language.GetTextValue("Mods.SatelliteStorage.Common.ItemsCounterCount");
-		}
-	}
-
-	public class SatelliteDisplayPlayer : ModPlayer
-	{
-		public bool showItemsCount;
-
-		public override void ResetEffects()
-		{
-			showItemsCount = false;
-		}
-
-		public override void UpdateEquips()
-		{
-			foreach(Terraria.Item item in Player.armor)
-            {
-				if (item.type == ModContent.ItemType<Items.ItemsCountAccessoryItem>())
-                {
-					showItemsCount = true;
-				}
-
-			}
-
-			if (Player.HasItem(ModContent.ItemType<Items.ItemsCountAccessoryItem>()))
-				showItemsCount = true;
 		}
 	}
 }

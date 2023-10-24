@@ -3,6 +3,7 @@ Common: {
 	ItemsCounter: Items Counter
 	ItemsCounterCount: items in storage
 	CantUseWithoutSputnik: No available Satellite
+	Lang: en
 }
 
 ChanceNames: {
@@ -14,6 +15,7 @@ ChanceNames: {
 }
 
 UITitles: {
+	AutoImport: Auto Import
 	DriveChest: Network Terminal
 	Sputnik: Satellite
 	SputnikItem: Satellite
@@ -37,7 +39,7 @@ Tiles: {
 	ShroomiteGeneratorTile.MapEntry: Shroomite Generator
 	SoulGeneratorTile.MapEntry: Soul Generator
 	SpectreGeneratorTile.MapEntry: Spectre Generator
-	SputnikTile.MapEntry: Sputnik
+	SputnikTile.MapEntry: Satellite
 }
 
 Items: {
@@ -92,7 +94,7 @@ Items: {
 	}
 
 	SputnikItem: {
-		DisplayName: Sputnik
+		DisplayName: Satellite
 		Tooltip: Can be placed only in the Space
 	}
 
@@ -150,4 +152,9 @@ Items: {
 		DisplayName: Powerful Generator
 		Tooltip: ""
 	}
+}
+
+Keybinds: {
+	SearchItem.DisplayName: Search Item
+	QuickOpen.DisplayName: Quick Open
 }

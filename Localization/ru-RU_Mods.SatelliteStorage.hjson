@@ -3,6 +3,7 @@ Common: {
 	ItemsCounter: Счетчик предметов
 	ItemsCounterCount: предметов в системе
 	CantUseWithoutSputnik: Отсутствует точка для подключения
+	Lang: ru
 }
 
 ChanceNames: {
@@ -14,6 +15,7 @@ ChanceNames: {
 }
 
 UITitles: {
+	AutoImport: Автоматический импорт
 	DriveChest: Терминал
 	Sputnik: Спутник
 	SputnikItem: Спутник
@@ -150,4 +152,9 @@ Items: {
 		DisplayName: Генератор из слитка силы
 		Tooltip: ""
 	}
+}
+
+Keybinds: {
+	SearchItem.DisplayName: Поиск предмета
+	QuickOpen.DisplayName: Открыть хранилище
 }

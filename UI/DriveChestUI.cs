@@ -126,6 +126,7 @@ namespace SatelliteStorage.UI
 			instance.checkPosition = false;
 		}
 
+		/*
 		public static void ReloadCraftItems()
         {
 			List<DriveItem> driveItems = DriveChestSystem.GetItems();
@@ -153,6 +154,7 @@ namespace SatelliteStorage.UI
 				Main.LocalPlayer.inventory[i+instance.defaultInventoryItemsCount] = item;
 			}
 		}
+		*/
 
 		public override void OnInitialize()
         {
@@ -213,124 +215,24 @@ namespace SatelliteStorage.UI
         {
 			if (craftOnMouseRecipe <= -1) return;
 
-			Recipe recipe = Main.recipe[craftOnMouseRecipe];
-			Player player = Main.LocalPlayer;
-			Item mouseItem = player.inventory[58];
-
-			bool isMouseItemAir = mouseItem.IsAir && Main.mouseItem.IsAir;
-			bool isMouseItemSame = mouseItem.type == recipe.createItem.type;
-			if (!isMouseItemAir && !isMouseItemSame) return;
-
-			if (isMouseItemSame)
-            {
-				if (mouseItem.stack + recipe.createItem.stack > mouseItem.maxStack) return;
-			}
-
-			if (Main.netMode == NetmodeID.SinglePlayer)
+			if (DriveChestSystemLocal.CraftItem(craftOnMouseRecipe))
 			{
-				List<RecipeItemsUses> uses = DriveChestSystem.GetItemsUsesForCraft(player.inventory, recipe);
-				if (uses == null) return;
-				uses.ForEach(u =>
-				{
-					Item item = new Item();
-					item.type = u.type;
-					item.SetDefaults(item.type);
-					item.stack = 1;
-
-					if (u.from == 0)
-					{
-						player.inventory[u.slot].stack -= u.stack;
-						if (player.inventory[u.slot].stack <= 0) player.inventory[u.slot].TurnToAir();
-					}
-					else
-					{
-						DriveChestSystem.SubItem(u.type, u.stack);
-					}
-				});
-
-				if (isMouseItemAir)
-				{
-					Main.mouseItem = recipe.createItem.Clone();
-				}
-				else
-				{
-					Main.mouseItem.stack += recipe.createItem.stack;
-				}
-
-				SoundEngine.PlaySound(SoundID.Grab);
-				DriveChestSystem.checkRecipesRefresh = false;
-			}
-
-			if (Main.netMode == NetmodeID.MultiplayerClient)
-            {
-				List<RecipeItemsUses> uses = DriveChestSystem.GetItemsUsesForCraft(player.inventory, recipe);
-				if (uses == null) return;
-
-				ModPacket packet = SatelliteStorage.instance.GetPacket();
-				packet.Write((byte)SatelliteStorage.MessageType.TryCraftRecipe);
-				packet.Write((byte)player.whoAmI);
-				packet.Write7BitEncodedInt(craftOnMouseRecipe);
-				packet.Send();
-				packet.Close();
-			}
-			
+                SoundEngine.PlaySound(SoundID.Grab);
+                DriveChestSystem.checkRecipesRefresh = false;
+            }
 		}
 
 		private void TryDepositItems(bool newItems = false)
         {
-			Player player = Main.LocalPlayer;
-			List<Item> items = new List<Item>();
-			bool itemAdded = false;
-			for (int i = 10; i < player.inventory.Length; i++)
-			{
-				Item item = player.inventory[i];
+            if (DriveChestSystemLocal.DepositItemsFromInventory(newItems))
+            {
+                SoundEngine.PlaySound(SoundID.Grab);
+                if (Main.netMode == NetmodeID.SinglePlayer) ReloadItems();
+            }
+        }
 
-				if (item != null && !item.favorited && !item.IsAir && i != 58)
-				{
-					DriveItem driveItem = new DriveItem();
-
-					driveItem.type = item.type;
-					driveItem.stack = item.stack;
-					driveItem.prefix = item.prefix;
-
-					if (Main.netMode == NetmodeID.SinglePlayer)
-					{
-						if ((newItems ? true : DriveChestSystem.HasItem(driveItem)) && DriveChestSystem.AddItem(driveItem))
-						{
-							item.TurnToAir();
-							itemAdded = true;
-						}
-					}
-					
-					if (Main.netMode == NetmodeID.MultiplayerClient)
-                    {
-						ModPacket packet = SatelliteStorage.instance.GetPacket();
-						packet.Write((byte)SatelliteStorage.MessageType.DepositDriveChestItem);
-						packet.Write((byte)player.whoAmI);
-						packet.Write((byte)(newItems ? 1 : 0));
-						packet.Write((byte)i);
-
-						packet.Send();
-						packet.Close();
-
-						if ((newItems ? true : DriveChestSystem.HasItem(driveItem)))
-						{
-							itemAdded = true;
-						}
-					}
-					
-				}
-			}
-
-			if (itemAdded)
-			{
-				SoundEngine.PlaySound(SoundID.Grab);
-				if (Main.netMode == NetmodeID.SinglePlayer) ReloadItems();
-			}
-		}
-
-
-		private void OnPanelMouseDown(UIMouseEvent evt, UIElement listeningElement)
+		/*
+        private void OnPanelMouseDown(UIMouseEvent evt, UIElement listeningElement)
         {
 			Player player = Main.LocalPlayer;
 			Item mouseItem = player.inventory[58];
@@ -361,6 +263,8 @@ namespace SatelliteStorage.UI
 			}
 			
 		}
+		*/
+
 
 		private Rectangle GetSlotHitbox(int startX, int startY)
 		{

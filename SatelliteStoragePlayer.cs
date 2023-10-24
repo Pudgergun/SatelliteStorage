@@ -10,6 +10,8 @@ using log4net;
 using SatelliteStorage.DriveSystem;
 using SatelliteStorage.UI;
 using Terraria.Audio;
+using Terraria.GameInput;
+using static Terraria.GameContent.Bestiary.IL_BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions;
 
 namespace SatelliteStorage
 {
@@ -17,12 +19,99 @@ namespace SatelliteStorage
     {
 
         private static List<bool> oldAdjList;
+        private static double longTickMilliseconds;
+
+        public bool showItemsCount { get; private set; }
+        public bool hasDriveRemoteItem { get; private set; }
+
+        
+
+        public override void ResetEffects()
+        {
+            showItemsCount = false;
+        }
+
+        public override bool HoverSlot(Item[] inventory, int context, int slot)
+        {
+            CheckDriveChestRemoveItem();
+            return base.HoverSlot(inventory, context, slot);
+        }
+
+        public override bool OnPickup(Item item)
+        {
+            CheckDriveChestRemoveItem();
+
+            return base.OnPickup(item);
+        }
+
+        public override void OnEnterWorld()
+        {
+            CheckDriveChestRemoveItem();
+            base.OnEnterWorld();
+        }
+
+        private void CheckDriveChestRemoveItem()
+        {
+            if (Player.HasItem(ModContent.ItemType<Items.DriveChestRemoteItem>()))
+                hasDriveRemoteItem = true;
+            else
+                hasDriveRemoteItem = false;
+        }
+
+        public override void Load()
+        {
+            longTickMilliseconds = Main.gameTimeCache.TotalGameTime.TotalMilliseconds;
+            base.Load();
+        }
+
+        public override void Unload()
+        {
+            base.Unload();
+        }
+
+        private void LongTick()
+        {
+            CheckDriveChestRemoveItem();
+                
+            if (hasDriveRemoteItem)
+            {
+                DriveChestSystemLocal.DepositItemsFromInventory(true, true, true);
+            }
+        }
+
+        public override void PostUpdate()
+        {
+            if (Main.gameTimeCache.TotalGameTime.TotalMilliseconds - longTickMilliseconds >= 330)
+            {
+                longTickMilliseconds = Main.gameTimeCache.TotalGameTime.TotalMilliseconds;
+                LongTick();
+            }
+
+            base.PostUpdate();
+        }
+
+
+        public override void UpdateEquips()
+        {
+            foreach (Terraria.Item item in Player.armor)
+            {
+                if (item.type == ModContent.ItemType<Items.ItemsCountAccessoryItem>())
+                {
+                    showItemsCount = true;
+                }
+            }
+
+            if (Player.HasItem(ModContent.ItemType<Items.ItemsCountAccessoryItem>()))
+                showItemsCount = true;
+
+        }
 
         public override bool ShiftClickSlot(Item[] inventory, int context, int slot)
         {
             if (DriveChestUI.isDrawing)
             {
-                if (Main.mouseItem.favorited) return false;
+                if (Main.LocalPlayer.inventory[slot].IsAir) return false;
+                if (Main.LocalPlayer.inventory[slot].favorited) return false;
 
                 if (Main.netMode == NetmodeID.SinglePlayer)
                 {
@@ -88,6 +177,39 @@ namespace SatelliteStorage
             }
 
             return false;
+        }
+
+        public override void SaveData(TagCompound tag)
+        {
+            IList<TagCompound> autoimportItemsCompound = new List<TagCompound>();
+
+            foreach (var item in SatelliteStorage.AutoImportItems)
+            {
+                autoimportItemsCompound.Add(Utils.DriveItemsSerializer.SaveDriveItem(item.Value));
+            }
+
+            tag.Set("SatelliteStorage_AutoImportItems", autoimportItemsCompound);
+
+            base.SaveData(tag);
+        }
+
+        public override void LoadData(TagCompound tag)
+        {
+            IList<TagCompound> autoimportItems = tag.GetList<TagCompound>("SatelliteStorage_AutoImportItems");
+
+            SatelliteStorage.AutoImportItems.Clear();
+
+            for (int i = 0; i < autoimportItems.Count; i++)
+            {
+                TagCompound itemCompound = autoimportItems[i];
+                DriveItem item = Utils.DriveItemsSerializer.LoadDriveItem(itemCompound);
+
+                if (!SatelliteStorage.AutoImportItems.ContainsKey(item.type))
+                    SatelliteStorage.AutoImportItems.Add(item.type, item);
+
+            }
+
+            base.LoadData(tag);
         }
     }
 }

@@ -17,6 +17,13 @@ using Terraria.GameContent.UI.Elements;
 using Terraria;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework.Input;
+using Terraria.GameInput;
+using static System.Net.Mime.MediaTypeNames;
+using Terraria.GameContent;
+using Terraria.UI.Chat;
+using System.Numerics;
+using Terraria.UI.Gamepad;
+using Vector2 = Microsoft.Xna.Framework.Vector2;
 
 namespace SatelliteStorage.UIElements
 {
@@ -36,7 +43,7 @@ namespace SatelliteStorage.UIElements
 		private UISearchBar _searchBar;
 		private UIPanel _searchBoxPanel;
 		private string _searchString;
-		private DynamicItemCollection _itemGrid;
+		private UIDynamicItemCollection _itemGrid;
 		public EntryFilterer<Item, IItemEntryFilter> _filterer;
 		private EntrySorter<int, ICreativeItemSortStep> _sorter;
 		private UIElement _containerInfinites;
@@ -113,7 +120,9 @@ namespace SatelliteStorage.UIElements
 			};
 
 			BuildPage();
-		}
+
+            SatelliteStorageKeybinds.OnSearchItemName += SatelliteStorageKeybinds_OnSearchItemName;
+        }
 
 		public void RebuildPage()
         {
@@ -329,10 +338,19 @@ namespace SatelliteStorage.UIElements
 			uIPanel.OnUpdate += Hover_OnUpdate;
 			uIPanel.OnMouseOver += Hover_OnMouseOver;
 			uIPanel.OnMouseOut += Hover_OnMouseOut;
-			DynamicItemCollection item = (_itemGrid = new DynamicItemCollection());
+			UIDynamicItemCollection item = (_itemGrid = new UIDynamicItemCollection());
 
-			item.OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) =>
+			item.SetDisplayAutoImport(true);
+
+
+            item.OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) =>
 			{
+				if (isHoldingAltOnDriveChestItem)
+				{
+					ToggleHoveredItemAutoImport();
+
+                    return;
+				}
 				if (Main.keyState.IsKeyDown(Keys.LeftShift) || Main.keyState.IsKeyDown(Keys.RightShift))
                 {
 					TakeItem(evt, listeningElement, 2);
@@ -347,8 +365,6 @@ namespace SatelliteStorage.UIElements
 				TakeItem(evt, listeningElement, 1);
 				return;
 			};
-
-			
 
 			UIElement uIElement = new UIElement
 			{
@@ -470,6 +486,8 @@ namespace SatelliteStorage.UIElements
 			uIPanel.BorderColor = new Color(35, 40, 83);
 			uIPanel.SetPadding(0f);
 			searchArea.Append(uIPanel);
+
+
 			UISearchBar uISearchBar = (_searchBar = new UISearchBar(Language.GetText("UI.PlayerNameSlot"), 0.8f)
 			{
 				Width = new StyleDimension(0f, 1f),
@@ -479,7 +497,9 @@ namespace SatelliteStorage.UIElements
 				Left = new StyleDimension(0f, 0f),
 				IgnoresMouseInteraction = true
 			});
-			uIPanel.OnLeftClick += Click_SearchArea;
+
+
+            uIPanel.OnLeftClick += Click_SearchArea;
 			uISearchBar.OnContentsChanged += OnSearchContentsChanged;
 			uIPanel.Append(uISearchBar);
 			uISearchBar.OnStartTakingInput += OnStartTakingInput;
@@ -497,7 +517,12 @@ namespace SatelliteStorage.UIElements
 			uIPanel.Append(uIImageButton2);
 		}
 
-		private void searchCancelButton_OnClick(UIMouseEvent evt, UIElement listeningElement)
+        private void SatelliteStorageKeybinds_OnSearchItemName(object sender, string name)
+        {
+			_searchBar?.SetContents(name);
+        }
+
+        private void searchCancelButton_OnClick(UIMouseEvent evt, UIElement listeningElement)
 		{
 			if (_searchBar.HasContents)
 			{
@@ -539,7 +564,26 @@ namespace SatelliteStorage.UIElements
 			_didClickSomething = true;
 		}
 
-		public override void Update(GameTime gameTime)
+		private bool isHoldingAltOnDriveChestItem => _itemGrid.hoverItemIndex > -1 && !Main.HoverItem.IsAir && Main.keyState.IsKeyDown(Keys.LeftAlt);
+
+		private void ToggleHoveredItemAutoImport()
+		{
+            if (_itemGrid.hoverItemIndex <= -1) return;
+
+            DriveItem driveItem = _itemGrid._driveItems[_itemGrid.hoverItemIndex];
+            if (driveItem == null) return;
+
+            if (SatelliteStorage.AutoImportItems.ContainsKey(driveItem.type))
+                SatelliteStorage.AutoImportItems.Remove(driveItem.type);
+            else
+                SatelliteStorage.AutoImportItems.Add(driveItem.type, driveItem);
+
+            SoundEngine.PlaySound(SoundID.MenuTick);
+
+            UI.DriveChestUI.ReloadItems();
+        }
+
+        public override void Update(GameTime gameTime)
 		{
 			base.Update(gameTime);
 			if (_didClickSomething && !_didClickSearchBar && _searchBar.IsWritingText)
@@ -548,9 +592,36 @@ namespace SatelliteStorage.UIElements
 			}
 			_didClickSomething = false;
 			_didClickSearchBar = false;
-		}
 
-		private void OnSearchContentsChanged(string contents)
+            if (isHoldingAltOnDriveChestItem)
+            {
+                Main.cursorOverride = CursorOverrideID.FavoriteStar;
+            }
+        }
+
+        public override void Draw(SpriteBatch spriteBatch)
+        {
+            base.Draw(spriteBatch);
+
+            if (isHoldingAltOnDriveChestItem)
+            {
+				DrawItemsAutoImportText(spriteBatch);
+            }
+        }
+
+		private static void DrawItemsAutoImportText(SpriteBatch spriteBatch)
+		{
+            Color color = new Color(Main.mouseTextColor, Main.mouseTextColor, Main.mouseTextColor, Main.mouseTextColor);
+			string text = Language.GetTextValue("Mods.SatelliteStorage.UITitles.AutoImport");
+            Vector2 vector = FontAssets.MouseText.Value.MeasureString(text);
+
+            int X = Main.mouseX + (int)vector.X - 25, Y = Main.mouseY - (int)vector.Y + 25;
+
+            ChatManager.DrawColorCodedStringWithShadow(spriteBatch, FontAssets.MouseText.Value, text, new Vector2(X, Y), color, 0f, vector / 2f, new Vector2(1), -1f, 1.5f);
+        }
+
+
+        private void OnSearchContentsChanged(string contents)
 		{
 			_searchString = contents;
 			_filterer.SetSearchFilter(contents);

@@ -30,7 +30,6 @@ namespace SatelliteStorage.DriveSystem
         public int context = 0;
         public int recipe = -1;
 
-
         public DriveItem()
         {
             stack = 0;
@@ -70,7 +69,10 @@ namespace SatelliteStorage.DriveSystem
             item.SetDefaults(item.type);
             item.stack = stack;
             if (item.stack > item.maxStack) item.stack = item.maxStack;
-            item.prefix = prefix;
+            item.ResetPrefix();
+            if (prefix > 0) item.Prefix(prefix);
+            item.Refresh(false);
+            item.RebuildTooltip();
             return item;
         }
     }

@@ -29,9 +29,8 @@ namespace SatelliteStorage.Tiles
 			DustType = DustID.BlueCrystalShard;
 
 			LocalizedText name = CreateMapEntryName();
-			name.Format(Language.GetTextValue("Mods.SatelliteStorage.UITitles.DriveChest"));
-
-			AddMapEntry(new Color(73, 137, 201), name, MapName);
+			name.Format(Language.GetTextValue("Mods.SatelliteStorage.Tiles.DriveChestTile"));
+			AddMapEntry(new Color(73, 137, 201), name);
 
 			TileObjectData.newTile.CopyFrom(TileObjectData.Style3x3);
 			TileObjectData.newTile.Origin = new Point16(2, 1);
@@ -49,14 +48,10 @@ namespace SatelliteStorage.Tiles
 			num = 1;
 		}
 
-		public static string MapName(string name, int i, int j)
-		{
-			return Language.GetTextValue("Mods.SatelliteStorage.UITitles.DriveChest");
-		}
 
 		public override void KillMultiTile(int i, int j, int frameX, int frameY)
 		{
-			Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 32, 32, ModContent.ItemType<Items.DriveChestItem>());
+			//Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 32, 32, ModContent.ItemType<Items.DriveChestItem>());
 		}
 
 		public override bool RightClick(int i, int j)

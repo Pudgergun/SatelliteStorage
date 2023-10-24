@@ -25,7 +25,7 @@ namespace SatelliteStorage.Tiles
 			Main.tileSolid[Type] = true;
 			Main.tileBlockLight[Type] = true;
 
-			AddMapEntry(new Color(152, 171, 198), Language.GetText("ItemName.QuartzOre"));
+			AddMapEntry(new Color(152, 171, 198));
 
 			DustType = 84;
 			ItemDropRule.Common(ModContent.ItemType<Items.QuartzShard>());

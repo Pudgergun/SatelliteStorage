@@ -20,6 +20,7 @@ namespace SatelliteStorage
         private bool requestStates = false;
         private List<TagCompound> notFoundItems = new List<TagCompound>();
 
+
         public override void UpdateUI(GameTime gameTime)
         {
             SatelliteStorage.instance.OnUpdateUI(gameTime);
@@ -53,9 +54,12 @@ namespace SatelliteStorage
             Dictionary<int, int> generators = DriveChestSystem.GetGenerators();
             foreach (int key in generators.Keys)
             {
-                TagCompound generatorCompound = new TagCompound();
-                generatorCompound.Add("type", key);
-                generatorCompound.Add("count", generators[key]);
+                TagCompound generatorCompound = new TagCompound
+                {
+                    { "type", key },
+                    { "count", generators[key] }
+                };
+
                 generatorsCompound.Add(generatorCompound);
             }
 
@@ -77,7 +81,7 @@ namespace SatelliteStorage
             IList<TagCompound> generatorsCompound = tag.GetList<TagCompound>("SatelliteStorage_Generators");
             DriveChestSystem.isSputnikPlaced = tag.GetBool("SatelliteStorage_IsSputnikPlaced");
             int modversion = tag.GetInt("SatelliteStorage_Version");
-            //SatelliteStorage.Debug("Mod Version: " + modversion);
+
             List<DriveItem> loadedItems = new List<DriveItem>();
 
 
