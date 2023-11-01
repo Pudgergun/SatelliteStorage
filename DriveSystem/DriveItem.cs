@@ -2,7 +2,7 @@
 
 namespace SatelliteStorage.DriveSystem
 {
-    public class DriveItem
+    public class DriveItem : IDriveItem
     {
         private int _stack;
         private string _stackText = "0";
@@ -16,50 +16,75 @@ namespace SatelliteStorage.DriveSystem
 
         public int stack
         {
-            get {
+            get
+            {
                 return _stack;
             }
-            set {
+            private set
+            {
                 _stack = value;
                 _stackText = Utils.StringUtils.GetStackCount(_stack);
             }
         }
 
-        public int type = 0;
-        public int prefix = 0;
-        public int context = 0;
-        public int recipe = -1;
+        public int type { get; private set; } = 0;
+        public int prefix { get; private set; } = 0;
+        public int context { get; private set; } = 0;
+        public int recipe { get; private set; } = -1;
 
         public DriveItem()
         {
             stack = 0;
         }
 
-        public DriveItem SetStack(int stack)
+        public IDriveItem SetStack(int stack)
         {
             this.stack = stack;
             return this;
         }
 
-        public DriveItem SetType(int type)
+        public IDriveItem AddStack(int count)
+        {
+            stack += count;
+            return this;
+        }
+
+        public IDriveItem SubStack(int count)
+        {
+            stack -= count;
+            return this;
+        }
+
+        public IDriveItem SetType(int type)
         {
             this.type = type;
             return this;
         }
 
-        public DriveItem SetPrefix(int prefix)
+        public IDriveItem SetPrefix(int prefix)
         {
             this.prefix = prefix;
             return this;
         }
 
-        public static DriveItem FromItem(Item item)
+        public IDriveItem SetContext(int context)
         {
-            DriveItem driveItem = new DriveItem();
-            driveItem.stack = item.stack;
-            driveItem.type = item.type;
-            driveItem.prefix = item.prefix;
-            return driveItem;
+            this.context = context;
+            return this;
+        }
+
+        public IDriveItem SetRecipe(int recipe)
+        {
+            this.recipe = recipe;
+            return this;
+        }
+
+        public static IDriveItem FromItem(Item item)
+        {
+            return new DriveItem()
+                .SetStack(item.stack)
+                .SetType(item.type)
+                .SetPrefix(item.prefix);
         }
 
         public Item ToItem()

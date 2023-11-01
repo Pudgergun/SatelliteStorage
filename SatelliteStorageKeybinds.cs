@@ -8,6 +8,8 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.Localization;
 using Microsoft.Xna.Framework;
+using SatelliteStorage.Utils;
+using SatelliteStorage.DriveSystem;
 
 namespace SatelliteStorage
 {
@@ -28,8 +30,8 @@ namespace SatelliteStorage
 
         public override void Load()
         {
-            SearchItemKeybind = KeybindLoader.RegisterKeybind(Mod, "SearchItem", "O");
-            QuickOpenDrive = KeybindLoader.RegisterKeybind(Mod, "QuickOpen", "E");
+            SearchItemKeybind = KeybindLoader.RegisterKeybind(Mod, "SearchItem", "P");
+            QuickOpenDrive = KeybindLoader.RegisterKeybind(Mod, "QuickOpen", "O");
         }
 
         public override void Unload()
@@ -43,33 +45,44 @@ namespace SatelliteStorage
     {
         private static double quickOpenCooldownMilliseconds;
 
+
         public override void ProcessTriggers(TriggersSet triggersSet)
         {
             if (SatelliteStorageKeybindsSystem.SearchItemKeybind.JustPressed)
+                OnSearchItemPressed();
+
+            if (SatelliteStorageKeybindsSystem.QuickOpenDrive.JustPressed)
+                OnQuickOpenPressed();
+        }
+
+        private void OnQuickOpenPressed()
+        {
+            if (!Main.LocalPlayer.GetModPlayer<SatelliteStoragePlayer>().hasDriveRemoteItem) return;
+            if (Main.gameTimeCache.TotalGameTime.TotalMilliseconds - quickOpenCooldownMilliseconds < 500) return;
+
+            quickOpenCooldownMilliseconds = Main.gameTimeCache.TotalGameTime.TotalMilliseconds;
+
+            if (!SatelliteStorage.driveChestSystem.isSputnikPlaced)
             {
-                if (!Main.HoverItem.IsAir)
-                {
-                    SatelliteStorageKeybinds.InvokeSearchItemKeybind(Main.HoverItem.AffixName());
-                }
+                Main.NewText(
+                    Language.GetTextValue("Mods.SatelliteStorage.Common.CantUseWithoutSputnik"),
+                    new Color(173, 57, 71)
+                );
+
+                return;
             }
 
-            if (
-                SatelliteStorageKeybindsSystem.QuickOpenDrive.JustPressed &&
-                Main.LocalPlayer.GetModPlayer<SatelliteStoragePlayer>().hasDriveRemoteItem
-            )
-            {
-                if (Main.gameTimeCache.TotalGameTime.TotalMilliseconds - quickOpenCooldownMilliseconds >= 500)
-                {
-                    quickOpenCooldownMilliseconds = Main.gameTimeCache.TotalGameTime.TotalMilliseconds;
+            if (!SatelliteStorage.GetUIState((int)UI.UITypes.DriveChest))
+                SatelliteStorage.driveChestSystem.ToggleDriveChestMenu();
+        }
 
-                    if (!DriveSystem.DriveChestSystem.isSputnikPlaced)
-                    {
-                        Main.NewText(Language.GetTextValue("Mods.SatelliteStorage.Common.CantUseWithoutSputnik"), new Color(173, 57, 71));
-                    }
+        private void OnSearchItemPressed()
+        {
+            if (Main.HoverItem.IsAir) return;
 
-                    if (!SatelliteStorage.GetUIState((int)UI.UITypes.DriveChest)) DriveSystem.DriveChestSystem.RequestOpenDriveChest();
-                }
-            }
+            SatelliteStorageKeybinds.InvokeSearchItemKeybind(
+                StringUtils.CleanAffixName(Main.HoverItem.AffixName())
+            );
         }
     }
 }

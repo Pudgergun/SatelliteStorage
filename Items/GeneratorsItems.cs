@@ -66,7 +66,7 @@ namespace SatelliteStorage.Items
             CreateRecipe()
             .AddIngredient(ModContent.ItemType<Items.QuartzModule>(), 1)
             .AddIngredient(ItemID.ShroomiteBar, 25)
-            .AddTile(TileID.Anvils)
+            .AddTile(TileID.MythrilAnvil)
             .Register();
         }
     }    
@@ -87,7 +87,7 @@ namespace SatelliteStorage.Items
             CreateRecipe()
             .AddIngredient(ModContent.ItemType<Items.QuartzModule>(), 1)
             .AddIngredient(ItemID.SpectreBar, 25)
-            .AddTile(TileID.Anvils)
+            .AddTile(TileID.MythrilAnvil)
             .Register();
         }
     }    
@@ -108,7 +108,7 @@ namespace SatelliteStorage.Items
             CreateRecipe()
             .AddIngredient(ModContent.ItemType<Items.QuartzModule>(), 1)
             .AddIngredient(ItemID.LunarBar, 25)
-            .AddTile(TileID.Anvils)
+            .AddTile(TileID.LunarCraftingStation)
             .Register();
         }
     }    
@@ -129,7 +129,7 @@ namespace SatelliteStorage.Items
             CreateRecipe()
             .AddIngredient(ModContent.ItemType<Items.QuartzModule>(), 1)
             .AddIngredient(ItemID.ChlorophyteBar, 25)
-            .AddTile(TileID.Anvils)
+            .AddTile(TileID.MythrilAnvil)
             .Register();
         }
     }    
@@ -150,7 +150,7 @@ namespace SatelliteStorage.Items
             CreateRecipe()
             .AddIngredient(ModContent.ItemType<Items.QuartzModule>(), 1)
             .AddIngredient(ItemID.HallowedBar, 25)
-            .AddTile(TileID.Anvils)
+            .AddTile(TileID.MythrilAnvil)
             .Register();
         }
     }
@@ -192,7 +192,7 @@ namespace SatelliteStorage.Items
             CreateRecipe()
             .AddIngredient(ModContent.ItemType<Items.QuartzModule>(), 1)
             .AddIngredient(ModContent.ItemType<Items.PowerBar>(), 25)
-            .AddTile(TileID.Anvils)
+            .AddTile(TileID.MythrilAnvil)
             .Register();
         }
     }

@@ -3,13 +3,12 @@ using Terraria;
 using Terraria.UI;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
-using System.IO;
 using Terraria.ModLoader.IO;
 using Terraria.ID;
-using log4net;
 using SatelliteStorage.DriveSystem;
-using Terraria.GameContent.Achievements;
 using System;
+using SatelliteStorage.Utils;
+using SatelliteStorage.ModNetwork;
 
 namespace SatelliteStorage
 {
@@ -20,27 +19,28 @@ namespace SatelliteStorage
         private bool requestStates = false;
         private List<TagCompound> notFoundItems = new List<TagCompound>();
 
-
         public override void UpdateUI(GameTime gameTime)
         {
-            SatelliteStorage.instance.OnUpdateUI(gameTime);
+            SatelliteStorage.UpdateUI(gameTime);
         }
 
         public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
         {
-            SatelliteStorage.instance.OnModifyInterfaceLayers(layers);
+            SatelliteStorage.ModifyInterfaceLayers(layers);
         }
 
         public override void SaveWorldData(TagCompound tag)
         {
-            IList<DriveItem> t_items = DriveChestSystem.GetItems();
+            SatelliteStorage.Debug("Saving world data");
+
+            IList<IDriveItem> t_items = SatelliteStorage.driveChestSystem.GetItems();
 
             IList<TagCompound> itemsCompound = new List<TagCompound>();
 
             for (int i = 0; i < t_items.Count; i++)
             {
-                DriveItem item = t_items[i];
-                itemsCompound.Add(Utils.DriveItemsSerializer.SaveDriveItem(item));
+                IDriveItem item = t_items[i];
+                itemsCompound.Add(DriveItemsSerializer.SerializeDriveItem(item));
             }
 
             foreach(TagCompound notFoundCompound in notFoundItems)
@@ -51,7 +51,7 @@ namespace SatelliteStorage
 
             IList<TagCompound> generatorsCompound = new List<TagCompound>();
 
-            Dictionary<int, int> generators = DriveChestSystem.GetGenerators();
+            Dictionary<int, int> generators = SatelliteStorage.generatorsSystem.GetGeneratorsInv();
             foreach (int key in generators.Keys)
             {
                 TagCompound generatorCompound = new TagCompound
@@ -64,7 +64,7 @@ namespace SatelliteStorage
             }
 
             tag.Set("SatelliteStorage_DriveChestItems", itemsCompound);
-            tag.Set("SatelliteStorage_IsSputnikPlaced", DriveChestSystem.isSputnikPlaced);
+            tag.Set("SatelliteStorage_IsSputnikPlaced", SatelliteStorage.driveChestSystem.isSputnikPlaced);
             tag.Set("SatelliteStorage_Generators", generatorsCompound);
             tag.Set("SatelliteStorage_Version", SatelliteStorage.ModVersion);
 
@@ -73,22 +73,25 @@ namespace SatelliteStorage
 
         public override void LoadWorldData(TagCompound tag)
         {
-            DriveChestSystem.isSputnikPlaced = false;
-            DriveChestSystem.ClearGenerators();
-            DriveChestSystem.ClearItems();
+            SatelliteStorage.Debug("Loading world data");
+
+            SatelliteStorage.driveChestSystem.isSputnikPlaced = false;
+            SatelliteStorage.driveChestSystem.ClearItems();
+
+            SatelliteStorage.generatorsSystem.ClearInv();
 
             IList<TagCompound> items = tag.GetList<TagCompound>("SatelliteStorage_DriveChestItems");
             IList<TagCompound> generatorsCompound = tag.GetList<TagCompound>("SatelliteStorage_Generators");
-            DriveChestSystem.isSputnikPlaced = tag.GetBool("SatelliteStorage_IsSputnikPlaced");
+            SatelliteStorage.driveChestSystem.isSputnikPlaced = tag.GetBool("SatelliteStorage_IsSputnikPlaced");
             int modversion = tag.GetInt("SatelliteStorage_Version");
 
-            List<DriveItem> loadedItems = new List<DriveItem>();
+            List<IDriveItem> loadedItems = new List<IDriveItem>();
 
 
             for(int i = 0; i < items.Count; i++)
             {
                 TagCompound itemCompound = items[i];
-                DriveItem item = Utils.DriveItemsSerializer.LoadDriveItem(itemCompound, modversion);
+                IDriveItem item = DriveItemsSerializer.DeserializeDriveItem(itemCompound, modversion);
                 if (item != null) loadedItems.Add(item);
                 else
                 {
@@ -96,14 +99,14 @@ namespace SatelliteStorage
                 }
             }
 
-            Dictionary<int, int> generators = DriveChestSystem.GetGenerators();
+            Dictionary<int, int> generators = SatelliteStorage.generatorsSystem.GetGeneratorsInv();
             foreach (TagCompound generatorCompound in generatorsCompound)
             {
                 generators[generatorCompound.GetInt("type")] = generatorCompound.GetInt("count");
             }
 
-            DriveChestSystem.InitItems(loadedItems);
-            DriveChestSystem.InitGenerators(generators);
+            SatelliteStorage.driveChestSystem.InitItems(loadedItems);
+            SatelliteStorage.generatorsSystem.InitGeneratorsInv(generators);
 
             base.LoadWorldData(tag);
         }
@@ -111,7 +114,7 @@ namespace SatelliteStorage
         public override void OnWorldUnload()
         {
             base.OnWorldUnload();
-            DriveChestSystem.ClearItems();
+            SatelliteStorage.driveChestSystem.ClearItems();
         }
 
         public override void PreUpdateItems()
@@ -161,7 +164,7 @@ namespace SatelliteStorage
             {
                 lastGeneratorsTickTime = Main.gameTimeCache.TotalGameTime.TotalMilliseconds;
 
-                DriveChestSystem.OnGeneratorsTick();
+                SatelliteStorage.generatorsSystem.OnGeneratorsTick();
             }
 
             base.PostUpdateWorld();
@@ -178,7 +181,7 @@ namespace SatelliteStorage
                 if (timestamp > lastGeneratorsServerTimestamp + interval)
                 {
                     lastGeneratorsServerTimestamp = timestamp;
-                    DriveChestSystem.OnGeneratorsTick();
+                    SatelliteStorage.generatorsSystem.OnGeneratorsTick();
                 }
             }
 
@@ -190,8 +193,8 @@ namespace SatelliteStorage
 
                     Player player = Main.LocalPlayer;
 
-                    ModPacket packet = SatelliteStorage.instance.GetPacket();
-                    packet.Write((byte)SatelliteStorage.MessageType.RequestStates);
+                    ModPacket packet = Mod.GetPacket();
+                    packet.Write((byte)MessageType.RequestStates);
                     packet.Write((byte)player.whoAmI);
                     packet.Send();
                     packet.Close();

@@ -9,216 +9,125 @@ using Terraria.ModLoader.IO;
 using SatelliteStorage.DriveSystem;
 using System;
 using Terraria.Audio;
+using SatelliteStorage.DriveChestNetwork;
+using SatelliteStorage.Generators;
+using SatelliteStorage.ModNetwork;
+using SatelliteStorage.GeneratorsNetwork;
+using SatelliteStorage.UI;
+using System.Linq;
 
 namespace SatelliteStorage
 {
-    public class Generator {
 
-        public int chance = 0;
-
-        private List<int> dropsChances = new List<int>();
-        public List<int[]> drops = new List<int[]>();
-
-        public Generator(int chance)
-        {
-            this.chance = chance;
-        }
-
-        public Generator AddDrop(int type, int count, int chance, int chanceType)
-        {
-            drops.Add(new int[4] { type, count, chance, chanceType });
-            dropsChances.Add(chance);
-            return this;
-        }
-
-        public int GetRandomDropIndex()
-        {
-            int index = Utils.RandomUtils.Roulette(dropsChances);
-            return index;
-        }
-
-        public int[] GetDropData(int index) // 0 - type, 1 - count, 2 - chance
-        {
-            return drops[index];
-        }
-    }
-
-	public class SatelliteStorage : Mod
+    public partial class SatelliteStorage : Mod
 	{
-        public static SatelliteStorage instance;
-        public DriveChestSystem driveChestSystem;
-        public static int itemsCount => DriveChestSystem.itemsCount;
+        private static SatelliteStorage instance;
 
-        public static bool TakeDriveChestItemSended = false;
-        public static bool AddDriveChestItemSended = false;
+        private DriveChestSystem _driveChestSystem;
+        private GeneratorsSystem _generatorsSystem;
+        private UIDriveChest _driveChestUI;
+        public static DriveChestSystem driveChestSystem => instance._driveChestSystem;
+        public static GeneratorsSystem generatorsSystem => instance._generatorsSystem;
+        public static UIDriveChest driveChestUI => instance._driveChestUI;
 
         public const int GeneratorsInterval = 20000;
         public const int ModVersion = 1;
+        public const bool DebugMode = true;
 
-        public static Dictionary<int, DriveItem> AutoImportItems = new Dictionary<int, DriveItem>();
+        private ISatelliteStorageNet _driveChestNet;
+        private ISatelliteStorageNet _generatorsNet;
 
+        private IDriveChestPositionState _driveChestPositionState;
 
-        private Dictionary<int, UI.BaseUIState> uidict = new Dictionary<int, UI.BaseUIState>();
+        private Dictionary<int, UIBaseState> uidict = new Dictionary<int, UIBaseState>();
+        
 
-
-        internal enum MessageType : byte
-        {
-            RequestDriveChestItems,
-            ResponseDriveChestItems,
-            TakeDriveChestItem,
-            AddDriveChestItem,
-            SyncDriveChestItem,
-            DepositDriveChestItem,
-            TryCraftRecipe,
-            SetSputnikState,
-            RequestSputnikState,
-            ChangeGeneratorState,
-            SyncGeneratorState,
-            RequestStates,
-            StorageItemsCount
-        }
-
-        internal enum GeneratorTypes : byte
-        {
-            BaseGenerator,
-            HellstoneGenerator,
-            MeteoriteGenerator,
-            ShroomiteGenerator,
-            SpectreGenerator,
-            LuminiteGenerator,
-            ChlorophyteGenerator,
-            HallowedGenerator,
-            SoulGenerator,
-            PowerGenerator
-        }
-
-        internal enum ChancesTypes : int
-        {
-            VeryHighChance,
-            HighChance,
-            AverageChance,
-            LowChance,
-            VeryLowChance
-        }
-
-        public Dictionary<int, Generator> generators = new Dictionary<int, Generator>();
+        private double recipesResearchTime = 0;
 
         public override void Load()
         {
             instance = this;
-            driveChestSystem = new DriveChestSystem();
 
-            generators.Add((int)GeneratorTypes.BaseGenerator, 
-                new Generator(25)
-                .AddDrop(ItemID.TinBar, 1, 100, (int)ChancesTypes.VeryHighChance)
-                .AddDrop(ItemID.CopperBar, 1, 100, (int)ChancesTypes.VeryHighChance)
-                .AddDrop(ItemID.IronBar, 1, 50, (int)ChancesTypes.HighChance)
-                .AddDrop(ItemID.LeadBar, 1, 50, (int)ChancesTypes.HighChance)
-                .AddDrop(ItemID.GoldBar, 1, 25, (int)ChancesTypes.AverageChance)
-                .AddDrop(ItemID.PlatinumBar, 1, 25, (int)ChancesTypes.AverageChance)
-                .AddDrop(ItemID.Diamond, 1, 5, (int)ChancesTypes.VeryLowChance)
-                .AddDrop(ItemID.Amber, 1, 5, (int)ChancesTypes.VeryLowChance)
-                .AddDrop(ItemID.Ruby, 1, 5, (int)ChancesTypes.VeryLowChance)
-                .AddDrop(ItemID.Emerald, 1, 5, (int)ChancesTypes.VeryLowChance)
-                .AddDrop(ItemID.Sapphire, 1, 5, (int)ChancesTypes.VeryLowChance)
-                .AddDrop(ItemID.Topaz, 1, 5, (int)ChancesTypes.VeryLowChance)
-                .AddDrop(ItemID.Amethyst, 1, 5, (int)ChancesTypes.VeryLowChance)
-            );
-
-            generators.Add((int)GeneratorTypes.HellstoneGenerator,
-                new Generator(15)
-                .AddDrop(ItemID.HellstoneBar, 1, 25, (int)ChancesTypes.AverageChance)
-            );
-
-            generators.Add((int)GeneratorTypes.MeteoriteGenerator,
-                new Generator(15)
-                .AddDrop(ItemID.MeteoriteBar, 1, 100, (int)ChancesTypes.AverageChance)
-            );
-
-            generators.Add((int)GeneratorTypes.ShroomiteGenerator,
-                new Generator(25)
-                .AddDrop(ItemID.GlowingMushroom, 1, 100, (int)ChancesTypes.VeryHighChance)
-                .AddDrop(ItemID.ChlorophyteBar, 1, 15, (int)ChancesTypes.VeryLowChance)
-            );
-
-            generators.Add((int)GeneratorTypes.SpectreGenerator,
-                new Generator(25)
-                .AddDrop(ItemID.Bone, 1, 100, (int)ChancesTypes.VeryHighChance)
-                .AddDrop(ItemID.Ectoplasm, 1, 50, (int)ChancesTypes.HighChance)
-                .AddDrop(ItemID.ChlorophyteBar, 1, 15, (int)ChancesTypes.VeryLowChance)
-            );
-
-            generators.Add((int)GeneratorTypes.LuminiteGenerator,
-                new Generator(15)
-                .AddDrop(ItemID.LunarBar, 1, 50, (int)ChancesTypes.HighChance)
-                .AddDrop(ItemID.FragmentSolar, 1, 50, (int)ChancesTypes.HighChance)
-                .AddDrop(ItemID.FragmentNebula, 1, 50, (int)ChancesTypes.HighChance)
-                .AddDrop(ItemID.FragmentVortex, 1, 50, (int)ChancesTypes.HighChance)
-                .AddDrop(ItemID.FragmentStardust, 1, 50, (int)ChancesTypes.HighChance)
-            );
-
-            generators.Add((int)GeneratorTypes.ChlorophyteGenerator,
-                new Generator(25)
-                .AddDrop(ItemID.JungleSpores, 1, 100, (int)ChancesTypes.VeryHighChance)
-                .AddDrop(ItemID.Stinger, 1, 100, (int)ChancesTypes.VeryHighChance)
-                .AddDrop(ItemID.Vine, 1, 100, (int)ChancesTypes.VeryHighChance)
-                .AddDrop(ItemID.ChlorophyteBar, 1, 50, (int)ChancesTypes.HighChance)
-            );
-
-            generators.Add((int)GeneratorTypes.HallowedGenerator,
-                new Generator(25)
-                .AddDrop(ItemID.SilverCoin, 1, 100, (int)ChancesTypes.VeryHighChance)
-                .AddDrop(ItemID.HallowedBar, 1, 25, (int)ChancesTypes.LowChance)
-                .AddDrop(ItemID.SuperHealingPotion, 1, 5, (int)ChancesTypes.VeryLowChance)
-                .AddDrop(ItemID.SuperManaPotion, 1, 5, (int)ChancesTypes.VeryLowChance)
-            );
-
-            generators.Add((int)GeneratorTypes.SoulGenerator,
-                new Generator(25)
-                .AddDrop(ItemID.SoulofFlight, 1, 100, (int)ChancesTypes.VeryHighChance)
-                .AddDrop(ItemID.SoulofLight, 1, 100, (int)ChancesTypes.VeryHighChance)
-                .AddDrop(ItemID.SoulofNight, 1, 100, (int)ChancesTypes.VeryHighChance)
-            );
-
-            generators.Add((int)GeneratorTypes.PowerGenerator,
-                new Generator(25)
-                .AddDrop(ItemID.SoulofMight, 1, 100, (int)ChancesTypes.VeryHighChance)
-                .AddDrop(ItemID.SoulofSight, 1, 100, (int)ChancesTypes.VeryHighChance)
-                .AddDrop(ItemID.SoulofFright, 1, 100, (int)ChancesTypes.VeryHighChance)
-            );
-
-            
-            /*
-            void logRare(string str, int type)
+            if (!Main.dedServ)
             {
-                Item itm = new Item();
-                itm.SetDefaults(type);
-                Debug(str + ": " + itm.rare);
+                uidict.Add((int)UITypes.DriveChest, _driveChestUI = new UIDriveChest());
             }
 
-            
-            logRare("hellstone", ItemID.HellstoneBar);
-            logRare("meteorite", ItemID.MeteoriteBar);
-            logRare("shroomite", ItemID.ShroomiteBar);
-            logRare("spectre", ItemID.SpectreBar);
-            logRare("hallowed", ItemID.HallowedBar);
-            logRare("chlorophyte", ItemID.ChlorophyteBar);
-            logRare("luminite", ItemID.LunarBar);
-            logRare("soul", ItemID.SoulofFlight);
-            logRare("power", ItemID.SoulofMight);
-            */
+            _driveChestSystem = new DriveChestSystem(this, _driveChestUI);
+            _generatorsSystem = new GeneratorsSystem(this);
+
+            _generatorsSystem.OnItemGenerated += (type, count) =>
+            {
+                _driveChestSystem.AddItem(
+                    new DriveItem()
+                        .SetType(type)
+                        .SetStack(count)
+                );
+            };
+
+            _driveChestPositionState = new DriveChestPositionState();
 
             base.Load();
 
             if (!Main.dedServ)
             {
-                uidict.Add((int)UI.UITypes.DriveChest, new UI.DriveChestUI());
 
-
-                foreach(UI.BaseUIState ui in uidict.Values)
+                foreach(UIBaseState ui in uidict.Values)
                 {
                     ui.Activate();
                 }
+
+                _driveChestSystem.OnDriveChestOpened += (positionChecking, position) =>
+                {
+                    if (positionChecking)
+                        _driveChestPositionState.SetOpenedPosition(position);
+                };
+
+                _driveChestUI.OnDisplayItemClicked += (item, clickType) =>
+                    _driveChestSystem.TakeItemClicked(item, clickType);
+
+                _driveChestUI.OnDisplayItemToggleAutoImport += (item) =>
+                {
+                    Main.LocalPlayer.GetModPlayer<SatelliteStoragePlayer>()
+                        .ToggleItemAutoImportClicked(item);
+
+                    SoundEngine.PlaySound(SoundID.MenuTick);
+                    _driveChestUI.ReloadItems();
+                };
+
+                _driveChestUI.OnItemsDisplayLeftMouseDown += () =>
+                    _driveChestSystem.AddItemFromMouse();
+
+                _driveChestUI.OnRequestItems += () =>
+                {
+                    _driveChestUI.UpdateAvailableRecipes(_driveChestSystem.GetAvailableRecipes());
+                    _driveChestUI.UpdateItems(_driveChestSystem.GetItems());
+
+                    _driveChestUI.UpdateAutoImportItems(
+                        Main.LocalPlayer.GetModPlayer<SatelliteStoragePlayer>().GetAutoImportItems()
+                    );
+                };
+
+                _driveChestUI.OnCheckRecipesRefreshState += (state) =>
+                    _driveChestSystem.checkRecipesRefresh = state;
+
+                _driveChestUI.OnCraftItem += (recipe) =>
+                {
+                    if (!_driveChestSystem.CraftItem(recipe)) return;
+
+                    SoundEngine.PlaySound(SoundID.Grab);
+                    _driveChestSystem.checkRecipesRefresh = false;
+                };
+
+                _driveChestUI.OnDepositItems += (allowNewItems) =>
+                {
+                    if (!_driveChestSystem.DepositItemsFromInventory(allowNewItems)) return;
+                    
+                    SoundEngine.PlaySound(SoundID.Grab);
+
+                    if (Main.netMode == NetmodeID.SinglePlayer) 
+                        _driveChestUI.ReloadItems();
+                };
             }
         }
 
@@ -229,13 +138,14 @@ namespace SatelliteStorage
 
         public static void SetUIState(int type, bool state)
         {
-            if (instance.uidict.ContainsKey(type)) instance.uidict[type].SetState(state);
+            if (instance.uidict.ContainsKey(type))
+                instance.uidict[type].SetState(state);
+
         }
 
         public static bool GetUIState(int type)
         {
-            if (!instance.uidict.ContainsKey(type)) return false;
-            return instance.uidict[type].GetState();
+            return instance.uidict.TryGetValue(type, out var e) && e.GetState();
         }
 
         public static void Debug(string msg)
@@ -243,549 +153,75 @@ namespace SatelliteStorage
             instance.Logger.Debug(msg);
         }
 
+        public static void UpdateUI(GameTime gameTime) 
+            => instance.OnUpdateUI(gameTime);
+
         public void OnUpdateUI(GameTime gameTime)
         {
-            foreach (UI.BaseUIState ui in uidict.Values)
+
+            foreach (UIBaseState ui in uidict.Values)
             {
                 ui.OnUpdateUI(gameTime);
             }
+
+            if (
+                gameTime.TotalGameTime.TotalMilliseconds - recipesResearchTime > 256 &&
+                (!_driveChestSystem.checkRecipesRefresh || SatelliteStoragePlayer.CheckAdjChanged()))
+            {
+                _driveChestSystem.checkRecipesRefresh = true;
+                recipesResearchTime = gameTime.TotalGameTime.TotalMilliseconds;
+                _driveChestSystem.ResearchRecipes();
+                _driveChestUI.RebuildCraftingPages();
+            }
+
+            if (_driveChestUI.GetState())
+            {
+                if (_driveChestPositionState.positionChecking)
+                {
+                    if (Main.LocalPlayer.position.Distance(_driveChestPositionState.openedPosition) > 100) SetUIState((int)UITypes.DriveChest, false);
+                }
+
+                if (!Main.playerInventory) SetUIState((int)UITypes.DriveChest, false);
+            } else
+            {
+                if (_driveChestPositionState.positionChecking)
+                    _driveChestPositionState.ResetOpenedPosition();
+            }
         }
+
+        public static void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
+            => instance.OnModifyInterfaceLayers(layers);
 
         public void OnModifyInterfaceLayers(List<GameInterfaceLayer> layers)
         {
-            foreach (UI.BaseUIState ui in uidict.Values)
+            foreach (UI.UIBaseState ui in uidict.Values)
             {
                 ui.OnModifyInterfaceLayers(layers);
             }
         }
     
-        public static void SyncIsSputnikPlacedToClients()
-        {
-            if (Main.netMode != NetmodeID.Server) return;
-            var spPacket = instance.GetPacket();
-            spPacket.Write((byte)MessageType.SetSputnikState);
-            spPacket.Write((byte)(DriveChestSystem.isSputnikPlaced ? 1 : 0));
-            spPacket.Send(-1);
-            spPacket.Close();
-        }
-
-        private void SendSputnikState(int playernumber)
-        {
-            var rsPacket = GetPacket();
-            rsPacket.Write((byte)MessageType.SetSputnikState);
-            rsPacket.Write((byte)(DriveChestSystem.isSputnikPlaced ? 1 : 0));
-            rsPacket.Send(playernumber);
-            rsPacket.Close();
-        }
 
         public override void HandlePacket(BinaryReader reader, int whoAmI)
         {
-            if (Main.netMode == NetmodeID.Server)
+            if (_driveChestNet == null)
             {
-                MessageType msgType = (MessageType)reader.ReadByte();
-                byte playernumber;
-
-                switch (msgType)
+                if (Main.netMode == NetmodeID.Server)
                 {
-                    case MessageType.RequestDriveChestItems:
+                    _driveChestNet = new DriveChestServer(this, _driveChestSystem);
+                    _generatorsNet = new GeneratorsServer(this, _generatorsSystem);
+                }
 
-                        playernumber = reader.ReadByte();
-
-                        var packet = GetPacket();
-                        packet.Write((byte)MessageType.ResponseDriveChestItems);
-                        packet.Write((byte)playernumber);
-                        packet.Write((byte)reader.ReadByte());
-                        Utils.DriveItemsSerializer.WriteDriveItemsToPacket(DriveChestSystem.GetItems(), packet);
-                        packet.Send(playernumber);
-                        packet.Close();
-                        
-                        break;
-                    case MessageType.SetSputnikState:
-                        playernumber = reader.ReadByte();
-                        DriveChestSystem.isSputnikPlaced = reader.ReadByte() == 1 ? true : false;
-                        SyncIsSputnikPlacedToClients();
-                        break;
-                    case MessageType.ChangeGeneratorState:
-                        playernumber = reader.ReadByte();
-                        byte generatorType = reader.ReadByte();
-                        byte changeTo = reader.ReadByte();
-
-                        if (changeTo == 1)
-                        {
-                            DriveChestSystem.AddGenerator(generatorType);
-                        } else
-                        {
-                            DriveChestSystem.SubGenerator(generatorType);
-                        }
-
-                        break;
-                    case MessageType.RequestSputnikState:
-                        playernumber = reader.ReadByte();
-                        SendSputnikState(playernumber);
-                        DriveChestSystem.SendSyncItemsCount(playernumber);
-                        break;
-                    case MessageType.RequestStates:
-                        playernumber = reader.ReadByte();
-                        DriveChestSystem.SyncAllGeneratorsTo(playernumber);
-                        SendSputnikState(playernumber);
-                        DriveChestSystem.SendSyncItemsCount(playernumber);
-                        break;
-                    case MessageType.TakeDriveChestItem:
-                        playernumber = reader.ReadByte();
-
-                        void SendTakeDriveVoidPacket()
-                        {
-                            var takeItemVoidPacket = GetPacket();
-                            takeItemVoidPacket.Write((byte)MessageType.TakeDriveChestItem);
-                            takeItemVoidPacket.Write((byte)playernumber);
-                            takeItemVoidPacket.Write(false);
-                            takeItemVoidPacket.Write7BitEncodedInt(0);
-                            takeItemVoidPacket.Write7BitEncodedInt(0);
-                            takeItemVoidPacket.Write7BitEncodedInt(0);
-                            takeItemVoidPacket.Write((byte)0);
-                            takeItemVoidPacket.Write7BitEncodedInt(0);
-                            takeItemVoidPacket.Send(playernumber);
-                            takeItemVoidPacket.Close();
-                        }
-
-                        int clickType = reader.ReadByte();
-
-                        Item tmouseItem = Main.player[playernumber].inventory[58];
-                        Player tdplayer = Main.player[playernumber];
-                        bool itemTaked = false;
-
-                        int takeItemType = reader.Read7BitEncodedInt();
-                        int takeItemPrefix = reader.Read7BitEncodedInt();
-
-                        DriveItem hoverDriveItem = new DriveItem();
-                        hoverDriveItem.type = takeItemType;
-                        hoverDriveItem.prefix = takeItemPrefix;
-
-                        Item hoverItem = new Item();
-                        hoverItem.type = takeItemType;
-                        hoverItem.SetDefaults(hoverItem.type);
-                        hoverItem.stack = DriveChestSystem.GetItemCount(hoverDriveItem);
-
-                        int slotToAdd = -1;
-                        int countToAdd = 0;
-
-                        Item takeItem;
-
-                        int type = 0;
-                        int stack = 0;
-                        int prefix = 0;
-
-                        bool isTMouseItemAir = tmouseItem.IsAir;
-                        bool isTMouseItemSame = tmouseItem.type == takeItemType;
-                        if (!isTMouseItemAir && !isTMouseItemSame)
-                        {
-                            SendTakeDriveVoidPacket();
-                            return;
-                        }
-
-                        if (clickType == 1)
-                        {
-                            if (!isTMouseItemAir && !isTMouseItemSame)
-                            {
-                                SendTakeDriveVoidPacket();
-                                return;
-                            }
-
-                            if (isTMouseItemSame)
-                            {
-                                if (tmouseItem.stack + 1 > tmouseItem.maxStack)
-                                {
-                                    SendTakeDriveVoidPacket();
-                                    return;
-                                }
-                            }
-                        }
-                        if (clickType == 2)
-                        {
-                            if (!isTMouseItemAir)
-                            {
-                                SendTakeDriveVoidPacket();
-                                return;
-                            }
-
-                            int stackDiff = 0;
-                            
-                            for (int s = 0; s < 50; s++)
-                            {
-                                if (tdplayer.inventory[s].type != ItemID.None &&
-                                    tdplayer.inventory[s].type == hoverItem.type &&
-                                    tdplayer.inventory[s].stack < hoverItem.maxStack &&
-                                    hoverItem.maxStack - tdplayer.inventory[s].stack > stackDiff &&
-                                    !tdplayer.inventory[s].favorited
-                                )
-                                {
-                                    stackDiff = hoverItem.maxStack - tdplayer.inventory[s].stack;
-                                    countToAdd = stackDiff;
-                                    if (countToAdd > hoverItem.stack) countToAdd = hoverItem.stack;
-                                    slotToAdd = s;
-                                }
-                            }
-
-                            if (slotToAdd <= -1)
-                            {
-                                for (int s = 0; s < 50; s++)
-                                {
-                                    if (slotToAdd <= -1 && tdplayer.inventory[s].type == ItemID.None)
-                                    {
-                                        slotToAdd = s;
-                                        countToAdd = hoverItem.maxStack;
-                                        if (countToAdd > hoverItem.stack) countToAdd = hoverItem.stack;
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (!isTMouseItemAir)
-                            {
-                                SendTakeDriveVoidPacket();
-                                return;
-                            }
-                        }
-
-                        if (clickType == 2 && slotToAdd <= -1)
-                        {
-                            SendTakeDriveVoidPacket();
-                            return;
-                        }
-
-                        int takeCount = clickType == 1 ? 1 : 0;
-                        if (clickType == 2) takeCount = countToAdd;
-
-                        takeItem = DriveChestSystem.TakeItem(takeItemType, takeItemPrefix, takeCount);
-                        if (takeItem != null)
-                        {
-                            if (clickType == 1)
-                            {
-                                if (isTMouseItemAir)
-                                {
-                                    itemTaked = true;
-                                    type = takeItem.type;
-                                    stack = takeItem.stack;
-                                    prefix = takeItem.prefix;
-                                } else
-                                {
-                                    itemTaked = true;
-                                    type = takeItem.type;
-                                    stack = takeItem.stack = tmouseItem.stack + 1;
-                                    prefix = takeItem.prefix;
-                                }
-                            }
-                            else if (clickType == 2)
-                            {
-                                if (tdplayer.inventory[slotToAdd].type == ItemID.None)
-                                {
-                                    tdplayer.inventory[slotToAdd] = takeItem.Clone();
-                                }
-                                else
-                                {
-                                    tdplayer.inventory[slotToAdd].stack += countToAdd;
-                                }
-
-                                type = tdplayer.inventory[slotToAdd].type;
-                                stack = tdplayer.inventory[slotToAdd].stack;
-                                prefix = tdplayer.inventory[slotToAdd].prefix;
-                                itemTaked = true;
-                            } else
-                            {
-                                itemTaked = true;
-                                type = takeItem.type;
-                                stack = takeItem.stack;
-                                prefix = takeItem.prefix;
-                            }
-                        }
-                        
-
-                        var takeItemPacket = GetPacket(); 
-                        takeItemPacket.Write((byte)MessageType.TakeDriveChestItem);
-                        takeItemPacket.Write((byte)playernumber);
-                        takeItemPacket.Write(itemTaked);
-                        takeItemPacket.Write7BitEncodedInt(type);
-                        takeItemPacket.Write7BitEncodedInt(stack);
-                        takeItemPacket.Write7BitEncodedInt(prefix);
-                        takeItemPacket.Write((byte)clickType);
-                        takeItemPacket.Write7BitEncodedInt(slotToAdd);
-                        takeItemPacket.Send(playernumber);
-                        takeItemPacket.Close();
-
-                        break;
-                    case MessageType.AddDriveChestItem:
-                        playernumber = reader.ReadByte();
-                        int addDriveChestItemType = reader.ReadByte();
-                        int fromSlot = 58;
-
-                        if (addDriveChestItemType == 1)
-                            fromSlot = reader.Read7BitEncodedInt();
-
-                        Item amouseItem = Main.player[playernumber].inventory[fromSlot];
-
-                        bool added = false;
-
-                        DriveItem addItem = new DriveItem();
-                        addItem.type = amouseItem.type;
-                        addItem.stack = amouseItem.stack;
-                        addItem.prefix = amouseItem.prefix;
-
-                        if (!amouseItem.IsAir && DriveChestSystem.AddItem(addItem))
-                        {
-                            amouseItem.TurnToAir();
-                            added = true;
-                        }
-
-                        var addItemPacket = GetPacket();
-                        addItemPacket.Write((byte)MessageType.AddDriveChestItem);
-                        addItemPacket.Write((byte)playernumber);
-                        addItemPacket.Write(added);
-                        addItemPacket.Write7BitEncodedInt(fromSlot);
-                        addItemPacket.Send(playernumber);
-                        addItemPacket.Close();
-                        break;
-                    case MessageType.TryCraftRecipe:
-                        playernumber = reader.ReadByte();
-                        int recipeID = reader.Read7BitEncodedInt();
-                        Recipe recipe = Main.recipe[recipeID];
-                        Item[] plInvItems = Main.player[playernumber].inventory;
-                        Item plMouseItem = plInvItems[58];
-
-                        bool isMouseItemAir = plMouseItem.IsAir;
-                        bool isMouseItemSame = plMouseItem.type == recipe.createItem.type;
-                        if (!isMouseItemAir && !isMouseItemSame) return;
-
-                        if (isMouseItemSame)
-                        {
-                            if (plMouseItem.stack + recipe.createItem.stack > plMouseItem.maxStack) return;
-                        }
-
-                        List<RecipeItemsUses> uses = DriveChestSystem.GetItemsUsesForCraft(plInvItems, recipe);
-                        if (uses == null) return;
-
-                        Dictionary<int, int> changedInvSlots = new Dictionary<int, int>();
-
-                        uses.ForEach(u =>
-                        {
-                            Item item = new Item();
-                            item.type = u.type;
-                            item.SetDefaults(item.type);
-                            item.stack = 1;
-
-                            if (u.from == 0)
-                            {
-                                plInvItems[u.slot].stack -= u.stack;
-                                if (plInvItems[u.slot].stack <= 0) plInvItems[u.slot].TurnToAir();
-
-                                changedInvSlots[u.slot] = plInvItems[u.slot].stack;
-                            }
-                            else
-                            {
-                                DriveChestSystem.SubItem(u.type, u.stack);
-                            }
-                        });
-
-                        if (isMouseItemAir)
-                        {
-                            plMouseItem = recipe.createItem.Clone();
-                        }
-                        else
-                        {
-                            plMouseItem.stack += recipe.createItem.stack;
-                        }
-
-                        var tryCraftItemPacket = GetPacket();
-                        tryCraftItemPacket.Write((byte)MessageType.TryCraftRecipe);
-                        tryCraftItemPacket.Write((byte)playernumber);
-                        tryCraftItemPacket.Write7BitEncodedInt(plMouseItem.type);
-                        tryCraftItemPacket.Write7BitEncodedInt(plMouseItem.stack);
-                        tryCraftItemPacket.Write7BitEncodedInt(plMouseItem.prefix);
-                        tryCraftItemPacket.Write7BitEncodedInt(changedInvSlots.Keys.Count);
-                        foreach (int key in changedInvSlots.Keys)
-                        {
-                            tryCraftItemPacket.Write7BitEncodedInt(key);
-                            tryCraftItemPacket.Write7BitEncodedInt(changedInvSlots[key]);
-                        }
-                        tryCraftItemPacket.Send(playernumber);
-                        tryCraftItemPacket.Close();
-
-                        break;
-                    case MessageType.DepositDriveChestItem:
-                        playernumber = reader.ReadByte();
-                        
-                        int depositType = reader.ReadByte();
-                        byte invSlot = reader.ReadByte();
-
-                        Item invItem = Main.player[playernumber].inventory[invSlot];
-
-                        if (invItem.IsAir) return;
-
-                        DriveItem depositItem = new DriveItem();
-                        depositItem.type = invItem.type;
-                        depositItem.stack = invItem.stack;
-                        depositItem.prefix = invItem.prefix;
-                       
-
-                        if ((depositType == 1 ? true : DriveChestSystem.HasItem(depositItem)) && DriveChestSystem.AddItem(depositItem))
-                        {
-                            invItem.TurnToAir();
-                            
-                            var depositItemPacket = GetPacket();
-                            depositItemPacket.Write((byte)MessageType.DepositDriveChestItem);
-                            depositItemPacket.Write((byte)playernumber);
-                            depositItemPacket.Write((byte)invSlot);
-                            depositItemPacket.Send(playernumber);
-                            depositItemPacket.Close();
-                        }
-
-                        break;
-                    default:
-                        break;
+                if (Main.netMode == NetmodeID.MultiplayerClient)
+                {
+                    _driveChestNet = new DriveChestClient(this, _driveChestSystem, _driveChestUI);
+                    _generatorsNet = new GeneratorsClient(this, _generatorsSystem);
                 }
             }
 
-            if (Main.netMode == NetmodeID.MultiplayerClient)
-            {
-                Player player = Main.LocalPlayer;
-                MessageType msgType = (MessageType)reader.ReadByte();
-                byte playernumber;
+            IPacketContext eventContext = new PacketContext(reader, whoAmI) { logsEnabled = false };
 
-                switch (msgType)
-                {
-                    case MessageType.ResponseDriveChestItems:
-                        playernumber = reader.ReadByte();
-                        bool checkPosition = reader.ReadByte() == 1 ? true : false;
-                        List<DriveItem> items = Utils.DriveItemsSerializer.ReadDriveItems(reader);
-                        DriveChestSystem.InitItems(items);
-                        SoundEngine.PlaySound(SoundID.MenuOpen);
-                        Main.playerInventory = true;
-                        SetUIState((int)UI.UITypes.DriveChest, true);
-                        if (checkPosition) UI.DriveChestUI.SetOpenedPosition(Main.LocalPlayer.position);
-                        break;
-                    case MessageType.TakeDriveChestItem:
-                        playernumber = reader.ReadByte();
-                        bool itemTaked = reader.ReadBoolean();
-                        Item takeItem = new Item();
-                        takeItem.type = reader.Read7BitEncodedInt();
-                        takeItem.SetDefaults(takeItem.type);
-                        takeItem.stack = reader.Read7BitEncodedInt();
-                        takeItem.prefix = reader.Read7BitEncodedInt();
-
-                        byte clickType = reader.ReadByte();
-                        int invslot = reader.Read7BitEncodedInt();
-
-                        if (itemTaked)
-                        {
-                            if (clickType == 2)
-                            {
-                                SoundEngine.PlaySound(SoundID.Grab);
-                                TakeDriveChestItemSended = false;
-                                Main.LocalPlayer.inventory[invslot] = takeItem;
-                                break;
-                            }
-
-                            Main.mouseItem = takeItem;
-                            if (clickType == 1)
-                            {
-                                SoundEngine.PlaySound(SoundID.MenuTick);
-                            }
-                            else
-                            {
-                                SoundEngine.PlaySound(SoundID.Grab);
-                            }
-                        }
-
-                        TakeDriveChestItemSended = false;
-
-                        break;
-                    case MessageType.AddDriveChestItem:
-                        playernumber = reader.ReadByte();
-                        bool added = reader.ReadBoolean();
-                        int fromslot = reader.Read7BitEncodedInt();
-                        Item mouseItem = player.inventory[fromslot];
-
-                        if (added)
-                        {
-                            mouseItem.TurnToAir();
-                            Main.mouseItem.TurnToAir();
-                            SoundEngine.PlaySound(SoundID.Grab);
-                        }
-
-                        AddDriveChestItemSended = false;
-
-                        break;
-                    case MessageType.DepositDriveChestItem:
-                        playernumber = reader.ReadByte();
-                        int invSlot = reader.ReadByte();
-
-                        Item item = player.inventory[invSlot];
-                        item.TurnToAir();
-
-                        break;
-                    case MessageType.SetSputnikState:
-                        int state = reader.ReadByte();
-
-                        DriveChestSystem.isSputnikPlaced = state == 1 ? true : false;
-
-                        break;                    
-                    case MessageType.SyncGeneratorState:
-                        byte generatorType = reader.ReadByte();
-                        int generatorCount = reader.Read7BitEncodedInt();
-                        DriveChestSystem.instance.generators[generatorType] = generatorCount;
-
-                        break;
-                    case MessageType.TryCraftRecipe:
-                        playernumber = reader.ReadByte();
-                        
-                        int mItemType = reader.Read7BitEncodedInt();
-                        int mItemStack = reader.Read7BitEncodedInt();
-                        int mItemPrefix = reader.Read7BitEncodedInt();
-
-                        Item mItem = player.inventory[58];
-
-                        mItem.type = mItemType;
-                        mItem.SetDefaults(mItem.type);
-                        mItem.stack = mItemStack;
-                        mItem.prefix = mItemPrefix;
-
-                        Main.mouseItem = mItem;
-
-                        int subInvItemsCount = reader.Read7BitEncodedInt();
-
-                        for (int i = 0; i < subInvItemsCount; i++)
-                        {
-                            int slot = reader.Read7BitEncodedInt();
-                            int count = reader.Read7BitEncodedInt();
-                            player.inventory[slot].stack = count;
-                            if (player.inventory[slot].stack <= 0) player.inventory[slot].TurnToAir();
-                        }
-
-                        SoundEngine.PlaySound(SoundID.Grab);
-                        DriveChestSystem.checkRecipesRefresh = false;
-
-                        break;
-                    case MessageType.SyncDriveChestItem:
-
-                        DriveItem syncItem = new DriveItem();
-
-                        syncItem.type = reader.Read7BitEncodedInt();
-                        syncItem.stack = reader.Read7BitEncodedInt();
-                        syncItem.prefix = reader.Read7BitEncodedInt();
-
-                        DriveChestSystem.SyncItem(syncItem);
-                        UI.DriveChestUI.ReloadItems();
-
-                        break;
-                    case MessageType.StorageItemsCount:
-
-                        DriveChestSystem.itemsCount = reader.Read7BitEncodedInt();
-                        break;
-                    default:
-                        Debug("SatelliteStorage: Unknown Message type: " + msgType);
-                        break;
-                }
-            }
+            _driveChestNet.HandlePacket(eventContext);
+            _generatorsNet.HandlePacket(eventContext);
         }
     }
 }

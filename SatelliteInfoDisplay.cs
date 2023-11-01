@@ -16,17 +16,18 @@ namespace SatelliteStorage
 {
     internal class SatelliteInfoDisplay : InfoDisplay
     {
-		public override bool Active()
+
+        public override bool Active()
 		{
 			return Main.LocalPlayer.GetModPlayer<SatelliteStoragePlayer>().showItemsCount;
 		}
 
         public override string DisplayValue(ref Color displayColor, ref Color displayShadowColor)
 		{
-			string count = SatelliteStorage.itemsCount.ToString("##,##0");
+			string count = SatelliteStorage.driveChestSystem.itemsCount.ToString("##,##0");
 
 			if (Language.GetTextValue("Mods.SatelliteStorage.Common.Lang") == "ru")
-				count = SatelliteStorage.itemsCount +"";
+				count = SatelliteStorage.driveChestSystem.itemsCount +"";
 
 			return $"{count} " + Language.GetTextValue("Mods.SatelliteStorage.Common.ItemsCounterCount");
 		}

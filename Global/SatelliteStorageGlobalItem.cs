@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using SatelliteStorage.DriveSystem;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Terraria;
@@ -10,12 +11,11 @@ namespace SatelliteStorage.Global
 {
     class SatelliteStorageGlobalItem : GlobalItem
     {
-
         public override bool OnPickup(Item item, Player player)
         {
             if (SatelliteStorage.GetUIState((int)UI.UITypes.DriveChest))
             {
-                DriveSystem.DriveChestSystem.checkRecipesRefresh = false;
+                SatelliteStorage.driveChestSystem.checkRecipesRefresh = false;
             }
 
             return base.OnPickup(item, player);
@@ -25,7 +25,7 @@ namespace SatelliteStorage.Global
         {
             if (SatelliteStorage.GetUIState((int)UI.UITypes.DriveChest))
             {
-                DriveSystem.DriveChestSystem.checkRecipesRefresh = false;
+                SatelliteStorage.driveChestSystem.checkRecipesRefresh = false;
             }
 
             base.OnConsumeItem(item, player);

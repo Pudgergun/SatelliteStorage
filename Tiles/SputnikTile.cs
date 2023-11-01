@@ -11,12 +11,15 @@ using Terraria.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.ComponentModel;
+using SatelliteStorage.DriveSystem;
+using SatelliteStorage.ModNetwork;
 
 namespace SatelliteStorage.Tiles
 {
     class SputnikTile : ModTile
     {
-		public override void SetStaticDefaults()
+
+        public override void SetStaticDefaults()
 		{
 			Main.tileLighted[Type] = true;
 			Main.tileFrameImportant[Type] = true;
@@ -46,7 +49,7 @@ namespace SatelliteStorage.Tiles
         public override bool CanPlace(int i, int j)
         {
 			if (Main.LocalPlayer.position.Y > Main.worldSurface * 4.2) return false;
-			if (DriveSystem.DriveChestSystem.isSputnikPlaced) return false;
+			if (SatelliteStorage.driveChestSystem.isSputnikPlaced) return false;
             return base.CanPlace(i, j);
         }
 
@@ -57,10 +60,8 @@ namespace SatelliteStorage.Tiles
 
 		public override void KillMultiTile(int i, int j, int frameX, int frameY)
 		{
-			//Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 32, 32, ModContent.ItemType<Items.SputnikItem>());
-
-			DriveSystem.DriveChestSystem.isSputnikPlaced = false;
-			SatelliteStorage.SyncIsSputnikPlacedToClients();
+            SatelliteStorage.driveChestSystem.isSputnikPlaced = false;
+            SatelliteStorage.driveChestSystem.SyncIsSputnikPlacedToClients();
 		}
 
 		private void SendSyncSputnikState()
@@ -68,10 +69,10 @@ namespace SatelliteStorage.Tiles
 			if (Main.netMode == NetmodeID.MultiplayerClient)
 			{
 				Player player = Main.LocalPlayer;
-				ModPacket packet = SatelliteStorage.instance.GetPacket();
-				packet.Write((byte)SatelliteStorage.MessageType.SetSputnikState);
+				ModPacket packet = Mod.GetPacket();
+				packet.Write((byte)MessageType.SetSputnikState);
 				packet.Write((byte)player.whoAmI);
-				packet.Write((byte)(DriveSystem.DriveChestSystem.isSputnikPlaced ? 1 : 0));
+				packet.Write((byte)(SatelliteStorage.driveChestSystem.isSputnikPlaced ? 1 : 0));
 				packet.Send();
 				packet.Close();
 			}
@@ -118,7 +119,7 @@ namespace SatelliteStorage.Tiles
 
 		public override void PlaceInWorld(int i, int j, Item item)
 		{
-			DriveSystem.DriveChestSystem.isSputnikPlaced = true;
+            SatelliteStorage.driveChestSystem.isSputnikPlaced = true;
 			SendSyncSputnikState();
 			base.PlaceInWorld(i, j, item);
 		}
