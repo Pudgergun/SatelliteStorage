@@ -9,6 +9,9 @@ using Terraria.Enums;
 using Terraria.Localization;
 using Terraria.Audio;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using SatelliteStorage.Generators;
+using SatelliteStorage.ModNetwork;
 
 namespace SatelliteStorage.Tiles
 {
@@ -17,8 +20,9 @@ namespace SatelliteStorage.Tiles
 		public byte generatorType;
 		public int itemDrop;
 		public string item_name;
+		private int animationUniqueFrame = -1;
 
-		public override void SetStaticDefaults()
+        public override void SetStaticDefaults()
 		{
 			Main.tileLighted[Type] = true;
 			Main.tileFrameImportant[Type] = true;
@@ -64,17 +68,15 @@ namespace SatelliteStorage.Tiles
 		{
 			if (Main.netMode == NetmodeID.SinglePlayer || Main.netMode == NetmodeID.Server)
 			{
-				DriveSystem.DriveChestSystem.SubGenerator(generatorType);
+                SatelliteStorage.generatorsSystem.TakeGeneratorFromInv(generatorType);
 			}
-
-			//Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 32, 32, itemDrop);
 		}
 
 		public override void MouseOver(int i, int j)
 		{
 			Player player = Main.LocalPlayer;
 
-			player.cursorItemIconText = Language.GetTextValue("Mods.SatelliteStorage.ItemName." + item_name + "Item");
+			player.cursorItemIconText = Language.GetTextValue("Mods.SatelliteStorage.Tiles." + item_name + "Tile.MapEntry");
 
 			player.noThrow = 2;
 		}
@@ -105,14 +107,14 @@ namespace SatelliteStorage.Tiles
 		{
 			if (Main.netMode == NetmodeID.SinglePlayer)
 			{
-				DriveSystem.DriveChestSystem.AddGenerator(generatorType);
+                SatelliteStorage.generatorsSystem.AddGeneratorToInv(generatorType);
 			}
 
 			if (Main.netMode == NetmodeID.MultiplayerClient)
             {
 				Player player = Main.LocalPlayer;
-				ModPacket packet = SatelliteStorage.instance.GetPacket();
-				packet.Write((byte)SatelliteStorage.MessageType.ChangeGeneratorState);
+				ModPacket packet = Mod.GetPacket();
+				packet.Write((byte)MessageType.ChangeGeneratorState);
 				packet.Write((byte)player.whoAmI);
 				
 				packet.Write((byte)generatorType);
@@ -131,32 +133,15 @@ namespace SatelliteStorage.Tiles
 			Texture2D texture = ModContent.Request<Texture2D>("SatelliteStorage/Tiles/" + Name).Value;
 			Vector2 zero = Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange);
 
-			int height = tile.TileFrameY % AnimationFrameHeight == 54 ? 16 : 16;
-
 			int frameYOffset = Main.tileFrame[Type] * AnimationFrameHeight;
-
-			
-			//int uniqueAnimationFrame = Main.tileFrame[Type] + i;
-
-			/*
-			if (i % 2 == 0)
-				uniqueAnimationFrame += 1;
-            if (i % 3 == 0)
-                uniqueAnimationFrame += 2;
-            if (i % 4 == 0)
-                uniqueAnimationFrame += 3;
-			*/
-
-			//uniqueAnimationFrame %= 4;
-
-			//frameYOffset = uniqueAnimationFrame * AnimationFrameHeight;
-			
 
 			spriteBatch.Draw(
 				texture,
 				new Vector2(i * 16 - (int)Main.screenPosition.X, j * 16 - (int)Main.screenPosition.Y) + zero,
-				new Rectangle(tile.TileFrameX, tile.TileFrameY + frameYOffset, 16, height),
+				new Rectangle(tile.TileFrameX, tile.TileFrameY + frameYOffset, 16, 16),
 				Lighting.GetColor(i, j), 0f, default, 1f, SpriteEffects.None, 0f);
+
+			
 
 			return false;
 		}

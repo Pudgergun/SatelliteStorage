@@ -4,41 +4,41 @@ using Terraria.ID;
 using System.Collections.Generic;
 using System;
 using Terraria.Audio;
+using SatelliteStorage.UI;
+using Microsoft.Xna.Framework;
+using SatelliteStorage.ModNetwork;
 
 namespace SatelliteStorage.DriveSystem
 {
-	public class RecipeItemsUses
-    {
-		public int type = 0;
-		public int stack = 0;
-		public int from = 0;
-		public int slot = 0;
-    }
-
     public class DriveChestSystem
     {
-        public static DriveChestSystem instance;
-        private List<DriveItem> items = new List<DriveItem>();
-		public Dictionary<int, int> generators = new Dictionary<int, int>();
-		public static Dictionary<int, Recipe> availableRecipes = new Dictionary<int, Recipe>();
-		private Dictionary<int, int> generatedItemsQueue = new Dictionary<int, int>();
+        private List<IDriveItem> _items = new List<IDriveItem>();
+		private Dictionary<int, Recipe> _availableRecipes = new Dictionary<int, Recipe>();
 
-		public static bool isSputnikPlaced = false;
+        public bool isSputnikPlaced = false;
 
-        public static bool checkRecipesRefresh = false;
-		public static int itemsCount = 0;
+        public bool checkRecipesRefresh = false;
+        public int itemsCount { get; private set; } = 0;
+		private bool Debug_fillWithRandomItems = false;
 
-		private static bool Debug_fillWithRandomItems = false;
+		private Mod _mod;
+		private UIDriveChest _driveChestUI;
 
-        public DriveChestSystem()
-        {
-            instance = this;
-		}
+		public event Action<bool, Vector2> OnDriveChestOpened;
 
-        public static void InitItems(List<DriveItem> items)
+        public bool addDriveChestItemSended;
+        public bool takeDriveChestItemSended;
+
+        public DriveChestSystem(Mod mod, UIDriveChest driveChestUI)
+		{
+			_mod = mod;
+            _driveChestUI = driveChestUI;
+        }
+
+        public void InitItems(List<IDriveItem> items)
         {
             checkRecipesRefresh = false;
-            instance.items = items;
+            _items = items;
 
 			//========= DEBUG
 			if (Debug_fillWithRandomItems)
@@ -46,14 +46,14 @@ namespace SatelliteStorage.DriveSystem
 				Random rnd = new Random();
 				for (int i = 0; i < 1000; i++)
 				{
-					DriveItem itm = new DriveItem();
+                    IDriveItem itm = new DriveItem();
 					itm.SetType(i + 1).SetStack(1).SetPrefix(rnd.Next(1, 30));
-					instance.items.Add(itm);
+					items.Add(itm);
 				}
 			}
 			//===========
 
-			foreach(DriveItem itm in items)
+			foreach(IDriveItem itm in items)
             {
 				if (Main.netMode == NetmodeID.Server || Main.netMode == NetmodeID.SinglePlayer) itemsCount += itm.stack;
 			}
@@ -61,140 +61,438 @@ namespace SatelliteStorage.DriveSystem
 			SendSyncItemsCount();
 		}
 
-        public static void ClearItems()
+        public void ClearItems()
         {
-            instance.items.Clear();
+            _items.Clear();
 			if (Main.netMode == NetmodeID.Server || Main.netMode == NetmodeID.SinglePlayer) itemsCount = 0;
 		}
 
-		public static void ClearGenerators()
-        {
-			instance.generators.Clear();
-		}
-
-        public static List<DriveItem> GetItems()
-        {
-            return instance.items;
-        }
-
-		public static void InitGenerators(Dictionary<int, int> generators)
+		public void SetItemsCount(int count)
 		{
-			instance.generators = generators;
+			itemsCount = count;
 		}
 
-		public static Dictionary<int, int> GetGenerators()
-        {
-			return instance.generators;
-        }
+        public List<IDriveItem> GetItems() => _items;
+        public Dictionary<int, Recipe> GetAvailableRecipes() => _availableRecipes;
 
-		public static void AddGenerator(byte type)
+        public bool AddItem(IDriveItem item, bool needSync = true)
         {
-			if (instance.generators.ContainsKey(type)) instance.generators[type]++;
-			else instance.generators[type] = 1;
-			SyncGenerator(type);
-		}
-
-		public static void SubGenerator(byte type)
-        {
-			if (!instance.generators.ContainsKey(type)) return;
-			instance.generators[type]--;
-			if (instance.generators[type] < 0) instance.generators[type] = 0;
-			SyncGenerator(type);
-		}
-
-		public static void SyncGenerator(byte type, int to = -1)
-        {
-			if (Main.netMode != NetmodeID.Server) return;
-
-			var packet = SatelliteStorage.instance.GetPacket();
-			packet.Write((byte)SatelliteStorage.MessageType.SyncGeneratorState);
-			packet.Write((byte)type);
-			packet.Write7BitEncodedInt(instance.generators[type]);
-			packet.Send(to);
-			packet.Close();
-		}
-
-		public static void SyncAllGeneratorsTo(int to)
-        {
-			foreach (byte key in instance.generators.Keys)
-            {
-				SyncGenerator(key, to);
-            }
-        }
-
-		public static bool AddItem(DriveItem item, bool needSync = true)
-        {
-            DriveItem searchItem = instance.items.Find(v => v.type == item.type && v.prefix == item.prefix);
+            IDriveItem searchItem = _items.Find(v => v.type == item.type && v.prefix == item.prefix);
             if (searchItem != null)
             {
-                searchItem.stack += item.stack;
+                searchItem.AddStack(item.stack);
 				itemsCount += item.stack;
-				if (needSync) instance.SendItemSync(searchItem);
+				if (needSync) SendItemSync(searchItem);
 				if (needSync) SendSyncItemsCount();
 				return true;
             }
 
-            instance.items.Add(item);
+            _items.Add(item);
 			itemsCount += item.stack;
 
 			if (needSync) SendSyncItemsCount();
-			if (needSync) instance.SendItemSync(item);
+			if (needSync) SendItemSync(item);
 
             return true;
         }
 
-		public static void SyncItemByType(int type)
+		public void SyncItemByType(int type)
         {
-			DriveItem searchItem = instance.items.Find(v => v.type == type);
+            IDriveItem searchItem = _items.Find(v => v.type == type);
 			if (searchItem == null) return;
-			instance.SendItemSync(searchItem);
+			SendItemSync(searchItem);
 		}
 
-        public static bool HasItem(DriveItem item)
+        public bool HasItem(IDriveItem item)
         {
-            DriveItem searchItem = instance.items.Find(v => v.type == item.type && v.prefix == item.prefix);
+            IDriveItem searchItem = _items.Find(v => v.type == item.type && v.prefix == item.prefix);
             if (searchItem != null) return true;
             return false;
         }
 
-		public static int GetItemCount(DriveItem item)
+		public int GetItemCount(IDriveItem item)
 		{
-			DriveItem searchItem = instance.items.Find(v => v.type == item.type && v.prefix == item.prefix);
+            IDriveItem searchItem = _items.Find(v => v.type == item.type && v.prefix == item.prefix);
 			if (searchItem != null) return searchItem.stack;
 			return 0;
 		}
 
-		public static void SyncItem(DriveItem item)
+		public void SyncItem(IDriveItem item)
         {
-            DriveItem searchItem = instance.items.Find(v => v.type == item.type && v.prefix == item.prefix);
+            IDriveItem searchItem = _items.Find(v => v.type == item.type && v.prefix == item.prefix);
             if (searchItem != null)
             {
-                searchItem.stack = item.stack;
-                if (searchItem.stack <= 0) instance.items.Remove(searchItem);
+                searchItem.SetStack(item.stack);
+                if (searchItem.stack <= 0) _items.Remove(searchItem);
             }
             else
             {
-                instance.items.Add(item);
+                _items.Add(item);
             }
 
             checkRecipesRefresh = false;
         }
 
-		public static void SendSyncItemsCount(int to = -1)
+		public void SendSyncItemsCount(int to = -1)
         {
 			if (Main.netMode != NetmodeID.Server)
 			{
 				return;
 			}
 
-			var packet = SatelliteStorage.instance.GetPacket();
-			packet.Write((byte)SatelliteStorage.MessageType.StorageItemsCount);
+			var packet = _mod.GetPacket();
+			packet.Write((byte)MessageType.StorageItemsCount);
 			packet.Write7BitEncodedInt(itemsCount);
 			packet.Send(to);
 			packet.Close();
 		}
-       
-        private void SendItemSync(DriveItem item)
+
+        public void SyncIsSputnikPlacedToClients()
+        {
+            if (Main.netMode != NetmodeID.Server) return;
+            var spPacket = _mod.GetPacket();
+            spPacket.Write((byte)MessageType.SetSputnikState);
+            spPacket.Write((byte)(isSputnikPlaced ? 1 : 0));
+            spPacket.Send(-1);
+            spPacket.Close();
+        }
+
+        public void SendSputnikState(int playernumber)
+        {
+            var rsPacket = _mod.GetPacket();
+            rsPacket.Write((byte)MessageType.SetSputnikState);
+            rsPacket.Write((byte)(isSputnikPlaced ? 1 : 0));
+            rsPacket.Send(playernumber);
+            rsPacket.Close();
+        }
+
+		public void CallDriveChestOpened(bool positionChecking, Vector2 position)
+		{
+			OnDriveChestOpened.Invoke(positionChecking, position);
+		}
+
+		public void AddItemFromMouse()
+		{
+            Player player = Main.LocalPlayer;
+            Item mouseItem = player.inventory[58];
+
+            if (mouseItem.IsAir || Main.mouseItem.IsAir) return;
+
+
+            if (Main.netMode == NetmodeID.SinglePlayer)
+            {
+                if (!AddItem(DriveItem.FromItem(Main.mouseItem))) return;
+                _driveChestUI.ReloadItems();
+
+                mouseItem.TurnToAir();
+                Main.mouseItem.TurnToAir();
+                SoundEngine.PlaySound(SoundID.Grab);
+            }
+
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                if (addDriveChestItemSended) return;
+                addDriveChestItemSended = true;
+                ModPacket packet = _mod.GetPacket();
+                packet.Write((byte)MessageType.AddDriveChestItem);
+                packet.Write((byte)player.whoAmI);
+                packet.Write((byte)0);
+                packet.Send();
+                packet.Close();
+            }
+        }
+
+		public void TakeItemClicked(IDriveItem clickedItem, int clickType)
+		{
+            Item hoverItem = clickedItem.ToItem();
+
+            Player player = Main.LocalPlayer;
+            Item mouseItem = player.inventory[58];
+            int slotToAdd = -1;
+            int countToAdd = 0;
+
+            bool isMouseItemAir = mouseItem.IsAir && Main.mouseItem.IsAir;
+            bool isMouseItemSame = mouseItem.type == clickedItem.type;
+            if (!isMouseItemAir && !isMouseItemSame) return;
+
+            if (clickType == 1)
+            {
+                if (!isMouseItemAir && !isMouseItemSame) return;
+
+                if (isMouseItemSame)
+                {
+                    if (mouseItem.stack + 1 > mouseItem.maxStack) return;
+                }
+            }
+            else if (clickType == 2)
+            {
+
+                if (!isMouseItemAir) return;
+
+                int stackDiff = 0;
+
+                for (int s = 0; s < 50; s++)
+                {
+                    if (player.inventory[s].type != ItemID.None &&
+                        player.inventory[s].type == hoverItem.type &&
+                        player.inventory[s].stack < hoverItem.maxStack &&
+                        hoverItem.maxStack - player.inventory[s].stack > stackDiff &&
+                        !player.inventory[s].favorited
+                    )
+                    {
+                        stackDiff = hoverItem.maxStack - player.inventory[s].stack;
+                        countToAdd = stackDiff;
+                        if (countToAdd > hoverItem.stack) countToAdd = hoverItem.stack;
+                        slotToAdd = s;
+                    }
+                }
+
+                if (slotToAdd <= -1)
+                {
+                    for (int s = 0; s < 50; s++)
+                    {
+                        if (player.inventory[s].type == ItemID.None)
+                        {
+                            slotToAdd = s;
+                            countToAdd = hoverItem.maxStack;
+                            if (countToAdd > hoverItem.stack) countToAdd = hoverItem.stack;
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (!isMouseItemAir) return;
+            }
+
+            if (Main.netMode == NetmodeID.SinglePlayer)
+            {
+                if (clickType == 2 && slotToAdd <= -1) return;
+
+                int takeCount = clickType == 1 ? 1 : 0;
+                if (clickType == 2) takeCount = countToAdd;
+
+                Item takeItem = TakeItem(clickedItem.type, clickedItem.prefix, takeCount);
+                if (takeItem == null) return;
+
+                if (clickType == 1)
+                {
+                    if (isMouseItemAir)
+                    {
+                        Main.mouseItem = takeItem.Clone();
+                    }
+                    else
+                    {
+                        Main.mouseItem.stack += 1;
+                    }
+                }
+                else if (clickType == 2)
+                {
+                    if (player.inventory[slotToAdd].type == ItemID.None)
+                    {
+                        player.inventory[slotToAdd] = takeItem.Clone();
+                    }
+                    else
+                    {
+                        player.inventory[slotToAdd].stack += countToAdd;
+                    }
+
+                    SoundEngine.PlaySound(SoundID.Grab);
+                }
+                else
+                {
+                    Main.mouseItem = takeItem;
+                }
+
+                _driveChestUI.ReloadItems();
+
+                if (clickType == 1)
+                {
+                    SoundEngine.PlaySound(SoundID.MenuTick);
+                }
+                else
+                {
+                    SoundEngine.PlaySound(SoundID.Grab);
+                }
+            }
+
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                if (takeDriveChestItemSended) return;
+                takeDriveChestItemSended = true;
+
+                ModPacket packet = _mod.GetPacket();
+                packet.Write((byte)MessageType.TakeDriveChestItem);
+                packet.Write((byte)player.whoAmI);
+                packet.Write((byte)clickType);
+                packet.Write7BitEncodedInt(clickedItem.type);
+                packet.Write7BitEncodedInt(clickedItem.prefix);
+                packet.Send();
+                packet.Close();
+            }
+        }
+
+        public bool InventorySlotShift(Item[] inventory, int context, int slot)
+        {
+            if (_driveChestUI.isDrawing)
+            {
+                if (Main.LocalPlayer.inventory[slot].IsAir) return false;
+                if (Main.LocalPlayer.inventory[slot].favorited) return false;
+
+                if (Main.netMode == NetmodeID.SinglePlayer)
+                {
+                    if (!AddItem(DriveItem.FromItem(Main.LocalPlayer.inventory[slot]))) return false;
+                    _driveChestUI.ReloadItems();
+                    Main.LocalPlayer.inventory[slot].TurnToAir();
+                    SoundEngine.PlaySound(SoundID.Grab);
+                }
+
+                if (Main.netMode == NetmodeID.MultiplayerClient)
+                {
+                    if (addDriveChestItemSended) return false;
+                    addDriveChestItemSended = true;
+                    ModPacket packet = _mod.GetPacket();
+                    packet.Write((byte)MessageType.AddDriveChestItem);
+                    packet.Write((byte)Main.LocalPlayer.whoAmI);
+                    packet.Write((byte)1);
+                    packet.Write7BitEncodedInt(slot);
+                    packet.Send();
+                    packet.Close();
+                }
+
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <param name="allowNewItems">false stands for quick stack</param>
+        /// <param name="autoImportOnly">to import only those items that are marked as favorites (auto import)</param>
+        /// <param name="includeHands">include slots from 0 to 9</param>
+        public bool DepositItemsFromInventory(bool allowNewItems = false, bool autoImportOnly = false, bool includeHands = false)
+        {
+            Player player = Main.LocalPlayer;
+            bool itemAdded = false;
+
+            SatelliteStoragePlayer modPlayer = Main.LocalPlayer.GetModPlayer<SatelliteStoragePlayer>();
+
+            for (int i = includeHands ? 0 : 10; i < player.inventory.Length; i++)
+            {
+                Item item = player.inventory[i];
+
+                if (
+                    item != null &&
+                    !item.favorited &&
+                    !item.IsAir &&
+                    i != 58 &&
+                    (autoImportOnly ? modPlayer.GetAutoImportItems().ContainsKey(item.type) : true)
+                )
+                {
+                    IDriveItem driveItem = new DriveItem()
+						.SetType(item.type)
+						.SetStack(item.stack)
+						.SetPrefix(item.prefix);
+
+
+                    if (Main.netMode == NetmodeID.SinglePlayer)
+                    {
+                        if ((allowNewItems ? true : HasItem(driveItem)) && AddItem(driveItem))
+                        {
+                            item.TurnToAir();
+                            itemAdded = true;
+                        }
+                    }
+
+                    if (Main.netMode == NetmodeID.MultiplayerClient)
+                    {
+                        ModPacket packet = _mod.GetPacket();
+                        packet.Write((byte)MessageType.DepositDriveChestItem);
+                        packet.Write((byte)player.whoAmI);
+                        packet.Write((byte)(allowNewItems ? 1 : 0));
+                        packet.Write((byte)i);
+
+                        packet.Send();
+                        packet.Close();
+
+                        if ((allowNewItems ? true : HasItem(driveItem)))
+                        {
+                            itemAdded = true;
+                        }
+                    }
+
+                }
+            }
+
+            return itemAdded;
+        }
+
+        public bool CraftItem(int recipeID)
+        {
+            Recipe recipe = Main.recipe[recipeID];
+            Player player = Main.LocalPlayer;
+            Item mouseItem = player.inventory[58];
+
+            bool isMouseItemAir = mouseItem.IsAir && Main.mouseItem.IsAir;
+            bool isMouseItemSame = mouseItem.type == recipe.createItem.type;
+            if (!isMouseItemAir && !isMouseItemSame) return false;
+
+            if (isMouseItemSame)
+            {
+                if (mouseItem.stack + recipe.createItem.stack > mouseItem.maxStack) return false;
+            }
+
+            if (Main.netMode == NetmodeID.SinglePlayer)
+            {
+                List<RecipeItemStruct> uses = GetItemsUsesForCraft(player.inventory, recipe);
+                if (uses == null) return false;
+                uses.ForEach(u =>
+                {
+                    Item item = new Item();
+                    item.type = u.type;
+                    item.SetDefaults(item.type);
+                    item.stack = 1;
+
+                    if (u.from == 0)
+                    {
+                        player.inventory[u.slot].stack -= u.stack;
+                        if (player.inventory[u.slot].stack <= 0) player.inventory[u.slot].TurnToAir();
+                    }
+                    else
+                    {
+                        SubItem(u.type, u.stack);
+                    }
+                });
+
+                if (isMouseItemAir)
+                {
+                    Main.mouseItem = recipe.createItem.Clone();
+                }
+                else
+                {
+                    Main.mouseItem.stack += recipe.createItem.stack;
+                }
+
+                return true;
+            }
+
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                List<RecipeItemStruct> uses = GetItemsUsesForCraft(player.inventory, recipe);
+                if (uses == null) return false;
+
+                ModPacket packet = _mod.GetPacket();
+                packet.Write((byte)MessageType.TryCraftRecipe);
+                packet.Write((byte)player.whoAmI);
+                packet.Write7BitEncodedInt(recipeID);
+                packet.Send();
+                packet.Close();
+            }
+
+            return false;
+        }
+
+        private void SendItemSync(IDriveItem item)
         {
             if (Main.netMode != NetmodeID.Server)
             {
@@ -202,8 +500,8 @@ namespace SatelliteStorage.DriveSystem
                 return;
             }
 
-            var packet = SatelliteStorage.instance.GetPacket();
-            packet.Write((byte)SatelliteStorage.MessageType.SyncDriveChestItem);
+            var packet = _mod.GetPacket();
+            packet.Write((byte)MessageType.SyncDriveChestItem);
             packet.Write7BitEncodedInt(item.type);
             packet.Write7BitEncodedInt(item.stack);
             packet.Write7BitEncodedInt(item.prefix);
@@ -211,9 +509,9 @@ namespace SatelliteStorage.DriveSystem
             packet.Close();
         }
 
-        public static Item TakeItem(int type, int prefix, int count = 0)
+        public Item TakeItem(int type, int prefix, int count = 0)
         {
-            DriveItem searchItem = instance.items.Find(v => v.type == type && v.prefix == prefix);
+            IDriveItem searchItem = _items.Find(v => v.type == type && v.prefix == prefix);
             if (searchItem == null) return null;
             Item item = searchItem.ToItem();
 
@@ -226,51 +524,51 @@ namespace SatelliteStorage.DriveSystem
 
 			int oldStackCount = searchItem.stack + 0;
 
-            searchItem.stack -= stack;
+            searchItem.SubStack(stack);
 
 			int takeItemsCount = stack;
 
 			if (searchItem.stack <= 0)
 			{
 				takeItemsCount = oldStackCount;
-				instance.items.Remove(searchItem);
+				_items.Remove(searchItem);
 			}
 
 			if (Main.netMode == NetmodeID.Server || Main.netMode == NetmodeID.SinglePlayer) itemsCount -= takeItemsCount;
 			SendSyncItemsCount();
 
-			instance.SendItemSync(searchItem);
+			SendItemSync(searchItem);
 
             return item;
         }
 
-		public static void SubItem(int type, int count)
+		public void SubItem(int type, int count)
 		{
-			DriveItem searchItem = instance.items.Find(v => v.type == type);
+            IDriveItem searchItem = _items.Find(v => v.type == type);
 			if (searchItem == null) return;
 
 			int oldStackCount = searchItem.stack + 0;
 
-			searchItem.stack -= count;
+			searchItem.SubStack(count);
 
 			int takeItemsCount = count;
 
 			if (searchItem.stack <= 0)
 			{
 				takeItemsCount = oldStackCount;
-				instance.items.Remove(searchItem);
+				_items.Remove(searchItem);
 			}
 
 			if (Main.netMode == NetmodeID.Server || Main.netMode == NetmodeID.SinglePlayer) itemsCount -= takeItemsCount;
 			SendSyncItemsCount();
 
-			instance.SendItemSync(searchItem);
+			SendItemSync(searchItem);
 		}
 
 
-		public static List<RecipeItemsUses> GetItemsUsesForCraft(Item[] playerInv, Recipe recipe)
+        public List<RecipeItemStruct> GetItemsUsesForCraft(Item[] playerInv, Recipe recipe)
 		{
-			List<RecipeItemsUses> uses = new List<RecipeItemsUses>();
+			List<RecipeItemStruct> uses = new List<RecipeItemStruct>();
 			Dictionary<int, int> recipeItems = new Dictionary<int, int>();
 			Dictionary<int, int> hasItems = new Dictionary<int, int>();
 
@@ -289,7 +587,7 @@ namespace SatelliteStorage.DriveSystem
 					if (hasItems[invItem.type] < recipeItems[invItem.type])
 					{
 						hasItems[invItem.type] += invItem.stack;
-						RecipeItemsUses usesItem = new RecipeItemsUses();
+						RecipeItemStruct usesItem = new RecipeItemStruct();
 						usesItem.type = invItem.type;
 						usesItem.stack = invItem.stack;
 
@@ -305,15 +603,15 @@ namespace SatelliteStorage.DriveSystem
 			}
 			
 
-			for (int i = 0; i < instance.items.Count; i++)
+			for (int i = 0; i < _items.Count; i++)
 			{
-				DriveItem driveItem = instance.items[i];
+                IDriveItem driveItem = _items[i];
 				if (recipeItems.ContainsKey(driveItem.type))
                 {
 					if (hasItems[driveItem.type] < recipeItems[driveItem.type])
                     {
 						int needItems = recipeItems[driveItem.type] - hasItems[driveItem.type];
-						RecipeItemsUses usesItem = new RecipeItemsUses();
+						RecipeItemStruct usesItem = new RecipeItemStruct();
 						usesItem.type = driveItem.type;
 						usesItem.stack = driveItem.stack;
 						usesItem.from = 1;
@@ -333,15 +631,16 @@ namespace SatelliteStorage.DriveSystem
 			return uses;
 		}
 
-		public static bool RequestOpenDriveChest(bool checkPosition = false)
+        public bool ToggleDriveChestMenu(bool checkPosition = false)
         {
 			Player player = Main.LocalPlayer;
 			Main.mouseRightRelease = false;
 
-			if (SatelliteStorage.GetUIState((int)UI.UITypes.DriveChest))
+            if (_driveChestUI.GetState())
 			{
-				SatelliteStorage.SetUIState((int)UI.UITypes.DriveChest, false);
-				SoundEngine.PlaySound(SoundID.MenuClose);
+				_driveChestUI.SetState(false);
+
+                SoundEngine.PlaySound(SoundID.MenuClose);
 				return true;
 			}
 
@@ -369,14 +668,15 @@ namespace SatelliteStorage.DriveSystem
 			{
 				SoundEngine.PlaySound(SoundID.MenuOpen);
 				Main.playerInventory = true;
-				SatelliteStorage.SetUIState((int)UI.UITypes.DriveChest, true);
-				if (checkPosition) UI.DriveChestUI.SetOpenedPosition(Main.LocalPlayer.position);
+                _driveChestUI.SetState(true);
+
+				CallDriveChestOpened(checkPosition, Main.LocalPlayer.position);
 			}
 
 			if (Main.netMode == NetmodeID.MultiplayerClient)
 			{
-				ModPacket packet = SatelliteStorage.instance.GetPacket();
-				packet.Write((byte)SatelliteStorage.MessageType.RequestDriveChestItems);
+				ModPacket packet = _mod.GetPacket();
+				packet.Write((byte)MessageType.RequestDriveChestItems);
 				packet.Write((byte)player.whoAmI);
 				packet.Write((byte)(checkPosition ? 1: 0));
 
@@ -387,44 +687,9 @@ namespace SatelliteStorage.DriveSystem
 			return true;
 		}
 
-		public static void OnGeneratorsTick()
-        {
-			if (Main.netMode != NetmodeID.SinglePlayer && Main.netMode != NetmodeID.Server) return;
-
-			Dictionary<int, int> drops = new Dictionary<int, int>();
-
-			Random random = new Random();
-
-			foreach (int key in instance.generators.Keys)
-            {
-				for (int i = 0; i < instance.generators[key]; i++)
-				{
-					Generator generator = SatelliteStorage.instance.generators[key];
-
-					if (random.Next(0, 100) <= generator.chance)
-					{
-						int index = generator.GetRandomDropIndex();
-						int[] data = generator.GetDropData(index);
 
 
-						if (instance.generatedItemsQueue.ContainsKey(data[0])) instance.generatedItemsQueue[data[0]] += data[1];
-						else instance.generatedItemsQueue.Add(data[0], data[1]);
-					}
-				}
-            }
-
-			foreach (int key in instance.generatedItemsQueue.Keys)
-			{
-				DriveItem addItem = new DriveItem();
-				addItem.type = key;
-				addItem.stack = instance.generatedItemsQueue[key];
-				AddItem(addItem);
-			}
-
-			instance.generatedItemsQueue.Clear();
-		}
-
-        public static void ResearchRecipes()
+        public void ResearchRecipes()
         {
 			Player player = Main.LocalPlayer;
 			Item mouseItem = player.inventory[58];
@@ -433,35 +698,33 @@ namespace SatelliteStorage.DriveSystem
 
 			int maxRecipes = Recipe.maxRecipes;
 
-			availableRecipes.Clear();
+			_availableRecipes.Clear();
 
 			Dictionary<int, int> dictionary = new Dictionary<int, int>();
-			Item[] array = null;
-			Item item = null;
-			array = Main.player[Main.myPlayer].inventory;
+            Item[] array = Main.player[Main.myPlayer].inventory;
 
+            Item item;
+            for (int l = 0; l < 58; l++)
+            {
+                item = array[l];
+                if (item.stack > 0)
+                {
+                    if (dictionary.ContainsKey(item.type))
+                    {
+                        dictionary[item.type] += item.stack;
+                    }
+                    else
+                    {
+                        dictionary[item.type] = item.stack;
+                    }
+                }
+            }
 
-			for (int l = 0; l < 58; l++)
-			{
-				item = array[l];
-				if (item.stack > 0)
-				{
-					if (dictionary.ContainsKey(item.type))
-					{
-						dictionary[item.type] += item.stack;
-					}
-					else
-					{
-						dictionary[item.type] = item.stack;
-					}
-				}
-			}
-
-            List<DriveItem> driveItems = GetItems();
+            List<IDriveItem> driveItems = GetItems();
 
 			for (int l = 0; l < driveItems.Count; l++)
 			{
-				DriveItem driveItem = driveItems[l];
+                IDriveItem driveItem = driveItems[l];
 
 				if (dictionary.ContainsKey(driveItem.type))
 				{
@@ -529,7 +792,7 @@ namespace SatelliteStorage.DriveSystem
 
 					}
 
-					availableRecipes[n] = Main.recipe[n];
+					_availableRecipes[n] = Main.recipe[n];
 				}
 			}
 		}

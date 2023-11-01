@@ -21,7 +21,14 @@ namespace SatelliteStorage.Utils
 
         public static string GetLangTextValueIfExists(string key, string defaultValue = "")
         {
-            return Language.Exists(key) ? Language.GetTextValue(key) : defaultValue;
+            return 
+                Language.Exists(key) ? Language.GetTextValue(key) : defaultValue;
+        }
+
+        public static string CleanAffixName(string name)
+        {
+            return 
+                name.Split("[")[0].Trim();
         }
     }
 }

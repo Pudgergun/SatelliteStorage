@@ -5,6 +5,7 @@ using Terraria.GameContent.Creative;
 using Terraria.ModLoader;
 using System.Collections.Generic;
 using Terraria.Localization;
+using SatelliteStorage.Generators;
 
 namespace SatelliteStorage.Items
 {
@@ -12,7 +13,7 @@ namespace SatelliteStorage.Items
     {
 		public byte generatorType;
 
-		public override void SetStaticDefaults()
+        public override void SetStaticDefaults()
 		{
 			CreativeItemSacrificesCatalog.Instance.SacrificeCountNeededByItemId[Type] = 1;
 		}
@@ -41,27 +42,19 @@ namespace SatelliteStorage.Items
 			};
 			tooltips.Add(line);
 
-			Generator gen = SatelliteStorage.instance.generators[generatorType];
+			IGenerator gen = SatelliteStorage.generatorsSystem.GetGenerators()[generatorType];
 
-			foreach (int[] data in gen.drops)
+			foreach (GeneratorDropData data in gen.GetDropList())
 			{
 				Item itm = new Item();
-				itm.SetDefaults(data[0]);
+				itm.SetDefaults(data.type);
 
-				line = new TooltipLine(Mod, "dropText_" + Item.Name + "_" + itm.Name, "● " + itm.Name + " (" + Language.GetTextValue("Mods.SatelliteStorage.ChanceNames._" + data[3]) + ")")
+				line = new TooltipLine(Mod, "dropText_" + Item.Name + "_" + itm.Name, "● " + itm.Name + " (" + Language.GetTextValue("Mods.SatelliteStorage.ChanceNames._" + data.chanceType) + ")")
 				{
 					OverrideColor = Terraria.GameContent.UI.ItemRarity.GetColor(itm.rare)
 				};
 				tooltips.Add(line);
 			}
-			/*
-			foreach (TooltipLine line2 in tooltips)
-			{
-				if (line2.mod == "Terraria" && line2.Name == "ItemName")
-				{
-					line2.overrideColor = new Color(Main.DiscoR, Main.DiscoG, Main.DiscoB);
-				}
-			}*/
 		}
 
 		public override void AddRecipes()

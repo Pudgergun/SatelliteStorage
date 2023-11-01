@@ -13,7 +13,7 @@ namespace SatelliteStorage.Utils
 {
     public class DriveItemsSerializer
     {
-        public static TagCompound SaveDriveItem(DriveItem item)
+        public static TagCompound SerializeDriveItem(IDriveItem item)
         {
             TagCompound tag = new TagCompound();
             tag["type"] = item.type;
@@ -34,46 +34,39 @@ namespace SatelliteStorage.Utils
             return tag;
         }
 
-        public static DriveItem LoadDriveItem(TagCompound tag, int version = 1)
+        public static IDriveItem DeserializeDriveItem(TagCompound tag, int version = 1)
         {
-            DriveItem item = new DriveItem();
+            IDriveItem item = new DriveItem();
 
             string name = tag.GetString("name");
 
             if (name == "default" || version <= 0)
             {
-                item.type = tag.GetInt("type");
+                item.SetType(tag.GetInt("type"));
             } else
             {
-                try
-                {
-                    Mod itemMod = ModLoader.GetMod(tag.GetString("mod"));
-                    if (itemMod == null) return null;
-                    ModItem outitem;
-                    bool itemFound = itemMod.TryFind(name, out outitem);
-                    if (!itemFound) return null;
-                    item.type = outitem.Type;
-
-                } catch (KeyNotFoundException exc)
-                {
-                    return null;
-                }
+                Mod itemMod;
+                if (!ModLoader.TryGetMod(tag.GetString("mod"), out itemMod)) return null;
+                ModItem outitem;
+                bool itemFound = itemMod.TryFind(name, out outitem);
+                if (!itemFound) return null;
+                item.SetType(outitem.Type);
             }
             
-            item.stack = tag.GetInt("stack");
+            item.SetStack(tag.GetInt("stack"));
             int prefix = tag.GetInt("prefix");
 
-            if (prefix != 0) item.prefix = prefix;
+            if (prefix != 0) item.SetPrefix(prefix);
             return item;
         }
 
-        public static ModPacket WriteDriveItemsToPacket(List<DriveItem> items, ModPacket packet)
+        public static ModPacket WriteDriveItemsToPacket(List<IDriveItem> items, ModPacket packet)
         {
             packet.Write7BitEncodedInt(items.Count);
 
             for (int i = 0; i < items.Count; i++)
             {
-                DriveItem item = items[i];
+                IDriveItem item = items[i];
                 packet.Write7BitEncodedInt(item.type);
                 packet.Write7BitEncodedInt(item.stack);
                 packet.Write7BitEncodedInt(item.prefix);
@@ -82,19 +75,18 @@ namespace SatelliteStorage.Utils
             return packet;
         }
 
-        public static List<DriveItem> ReadDriveItems(BinaryReader reader)
+        public static List<IDriveItem> ReadDriveItems(BinaryReader reader)
         {
-            List<DriveItem> items = new List<DriveItem>();
+            List<IDriveItem> items = new List<IDriveItem>();
 
             int count = reader.Read7BitEncodedInt();
 
             for (int i = 0; i < count; i++)
             {
-                DriveItem item = new DriveItem();
-                item.type = reader.Read7BitEncodedInt();
-                item.stack = reader.Read7BitEncodedInt();
-                item.prefix = reader.Read7BitEncodedInt();
-                items.Add(item);
+                items.Add(new DriveItem()
+                    .SetType(reader.Read7BitEncodedInt())
+                    .SetStack(reader.Read7BitEncodedInt())
+                    .SetPrefix(reader.Read7BitEncodedInt()));
             }
 
             return items;

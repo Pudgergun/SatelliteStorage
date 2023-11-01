@@ -9,13 +9,14 @@ using Terraria.Enums;
 using Terraria.Localization;
 using Terraria.Audio;
 using Microsoft.Xna.Framework.Graphics;
+using SatelliteStorage.DriveSystem;
 
 namespace SatelliteStorage.Tiles
 {
 	class DriveChestTile : ModTile
 	{
 
-		public override void SetStaticDefaults()
+        public override void SetStaticDefaults()
 		{
 			Main.tileLighted[Type] = true;
 			Main.tileShine2[Type] = true;
@@ -49,19 +50,14 @@ namespace SatelliteStorage.Tiles
 		}
 
 
-		public override void KillMultiTile(int i, int j, int frameX, int frameY)
-		{
-			//Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 32, 32, ModContent.ItemType<Items.DriveChestItem>());
-		}
-
 		public override bool RightClick(int i, int j)
 		{
-			if (!DriveSystem.DriveChestSystem.isSputnikPlaced)
+			if (!SatelliteStorage.driveChestSystem.isSputnikPlaced)
 			{
 				Main.NewText(Language.GetTextValue("Mods.SatelliteStorage.Common.CantUseWithoutSputnik"), new Color(173, 57, 71));
 				return true;
 			}
-			return DriveSystem.DriveChestSystem.RequestOpenDriveChest(true);
+			return SatelliteStorage.driveChestSystem.ToggleDriveChestMenu(true);
 		}
 
 		public override void MouseOver(int i, int j)

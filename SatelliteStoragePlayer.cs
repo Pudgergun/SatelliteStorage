@@ -1,30 +1,51 @@
 ﻿using Terraria.ModLoader;
 using Terraria;
-using Terraria.UI;
-using Microsoft.Xna.Framework;
 using System.Collections.Generic;
-using System.IO;
 using Terraria.ModLoader.IO;
 using Terraria.ID;
-using log4net;
 using SatelliteStorage.DriveSystem;
 using SatelliteStorage.UI;
 using Terraria.Audio;
-using Terraria.GameInput;
-using static Terraria.GameContent.Bestiary.IL_BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions;
+using SatelliteStorage.Utils;
+using SatelliteStorage.ModNetwork;
 
 namespace SatelliteStorage
 {
     class SatelliteStoragePlayer : ModPlayer
     {
-
         private static List<bool> oldAdjList;
         private static double longTickMilliseconds;
+        public Dictionary<int, IDriveItem> _autoImportItems = new Dictionary<int, IDriveItem>();
+
+        public int TempTakeItemCount;
+        public int TempTakeItemType;
+
+        public int TempCraftItemCount;
+        public int TempCraftItemType;
 
         public bool showItemsCount { get; private set; }
         public bool hasDriveRemoteItem { get; private set; }
 
-        
+        public Dictionary<int, IDriveItem> GetAutoImportItems() => _autoImportItems;
+        public void ClearAutoImportItems() => _autoImportItems.Clear();
+        public void ToggleItemAutoImportClicked(IDriveItem item)
+        {
+            if (_autoImportItems.ContainsKey(item.type))
+                _autoImportItems.Remove(item.type);
+            else
+                _autoImportItems.Add(item.type, item);
+        }
+
+        public override void Load()
+        {
+            longTickMilliseconds = Main.gameTimeCache.TotalGameTime.TotalMilliseconds;
+            base.Load();
+        }
+
+        public override void Unload()
+        {
+            base.Unload();
+        }
 
         public override void ResetEffects()
         {
@@ -58,24 +79,13 @@ namespace SatelliteStorage
                 hasDriveRemoteItem = false;
         }
 
-        public override void Load()
-        {
-            longTickMilliseconds = Main.gameTimeCache.TotalGameTime.TotalMilliseconds;
-            base.Load();
-        }
-
-        public override void Unload()
-        {
-            base.Unload();
-        }
-
         private void LongTick()
         {
             CheckDriveChestRemoveItem();
                 
             if (hasDriveRemoteItem)
             {
-                DriveChestSystemLocal.DepositItemsFromInventory(true, true, true);
+                SatelliteStorage.driveChestSystem.DepositItemsFromInventory(true, true, true);
             }
         }
 
@@ -108,53 +118,32 @@ namespace SatelliteStorage
 
         public override bool ShiftClickSlot(Item[] inventory, int context, int slot)
         {
-            if (DriveChestUI.isDrawing)
-            {
-                if (Main.LocalPlayer.inventory[slot].IsAir) return false;
-                if (Main.LocalPlayer.inventory[slot].favorited) return false;
-
-                if (Main.netMode == NetmodeID.SinglePlayer)
-                {
-                    if (!DriveChestSystem.AddItem(DriveItem.FromItem(Main.LocalPlayer.inventory[slot]))) return false;
-                    DriveChestUI.ReloadItems();
-                    Main.LocalPlayer.inventory[slot].TurnToAir();
-                    SoundEngine.PlaySound(SoundID.Grab);
-                }
-
-                if (Main.netMode == NetmodeID.MultiplayerClient)
-                {
-                    if (SatelliteStorage.AddDriveChestItemSended) return false;
-                    SatelliteStorage.AddDriveChestItemSended = true;
-                    ModPacket packet = SatelliteStorage.instance.GetPacket();
-                    packet.Write((byte)SatelliteStorage.MessageType.AddDriveChestItem);
-                    packet.Write((byte)Main.LocalPlayer.whoAmI);
-                    packet.Write((byte)1);
-                    packet.Write7BitEncodedInt(slot);
-
-                    packet.Send();
-                    packet.Close();
-                }
-
-                return false;
-            }
-
-            return base.ShiftClickSlot(inventory, context, slot);
+            return
+                SatelliteStorage.driveChestSystem.InventorySlotShift(inventory, context, slot)
+                && 
+                base.ShiftClickSlot(inventory, context, slot);
         }
 
         public override bool CanUseItem(Item item)
         {
-            if (UI.DriveChestUI.mouseOver) return false;
+            if (
+                Main.netMode != NetmodeID.Server &&
+                SatelliteStorage.driveChestUI.mouseOver
+            ) return false;
+
             return base.CanUseItem(item);
         }
 
         public static bool CheckAdjChanged()
         {
             Player player = Main.LocalPlayer;
-            List<bool> adjList = new List<bool>();
 
-            adjList.Add(player.adjHoney);
-            adjList.Add(player.adjLava);
-            adjList.Add(player.adjWater);
+            List<bool> adjList = new List<bool>
+            {
+                player.adjHoney,
+                player.adjLava,
+                player.adjWater
+            };
 
             foreach (bool b in player.adjTile)
             {
@@ -181,11 +170,13 @@ namespace SatelliteStorage
 
         public override void SaveData(TagCompound tag)
         {
+            SatelliteStorage.Debug("Saving player data");
+
             IList<TagCompound> autoimportItemsCompound = new List<TagCompound>();
 
-            foreach (var item in SatelliteStorage.AutoImportItems)
+            foreach (var item in _autoImportItems)
             {
-                autoimportItemsCompound.Add(Utils.DriveItemsSerializer.SaveDriveItem(item.Value));
+                autoimportItemsCompound.Add(DriveItemsSerializer.SerializeDriveItem(item.Value));
             }
 
             tag.Set("SatelliteStorage_AutoImportItems", autoimportItemsCompound);
@@ -195,17 +186,22 @@ namespace SatelliteStorage
 
         public override void LoadData(TagCompound tag)
         {
-            IList<TagCompound> autoimportItems = tag.GetList<TagCompound>("SatelliteStorage_AutoImportItems");
+            SatelliteStorage.Debug("Loading player data");
 
-            SatelliteStorage.AutoImportItems.Clear();
+            IList<TagCompound> autoimportItems = 
+                tag.GetList<TagCompound>("SatelliteStorage_AutoImportItems");
+
+            ClearAutoImportItems();
 
             for (int i = 0; i < autoimportItems.Count; i++)
             {
                 TagCompound itemCompound = autoimportItems[i];
-                DriveItem item = Utils.DriveItemsSerializer.LoadDriveItem(itemCompound);
+                IDriveItem item = DriveItemsSerializer.DeserializeDriveItem(itemCompound);
 
-                if (!SatelliteStorage.AutoImportItems.ContainsKey(item.type))
-                    SatelliteStorage.AutoImportItems.Add(item.type, item);
+                if (item == null) continue;
+
+                if (!_autoImportItems.ContainsKey(item.type))
+                    _autoImportItems.Add(item.type, item);
 
             }
 
