@@ -41,6 +41,7 @@ namespace SatelliteStorage.UI
         private string _searchString;
         private UIDynamicItemCollection _itemGrid;
         public EntryFilterer<Item, IItemEntryFilter> _filterer;
+        public string searchString => _searchString;
         private EntrySorter<int, ICreativeItemSortStep> _sorter;
         private UIElement _containerInfinites;
         private UIElement _containerSacrifice;
@@ -323,10 +324,18 @@ namespace SatelliteStorage.UI
             _itemIdsAvailableToShow.AddRange(_itemIdsAvailableTotal.Where((x) =>
             {
                 if (!ContentSamples.ItemsByType.ContainsKey(x)) return false;
+
+                if (_searchString != null && _searchString != "")
+                {
+                    if (ContentSamples.ItemsByType[x].AffixName().ToLower().IndexOf(_searchString.Trim().ToLower()) < 0)
+                        return false;
+                }
+
                 return _filterer.FitsFilter(ContentSamples.ItemsByType[x]);
             }));
 
             _itemIdsAvailableToShow.Sort(_sorter);
+            
             _itemGrid.SetContentsToShow(_itemIdsAvailableToShow, _items, _autoImportItems);
         }
 
@@ -481,10 +490,10 @@ namespace SatelliteStorage.UI
         }
 
 
-        private void OnSearchContentsChanged(string contents)
+        private void OnSearchContentsChanged(string nameFilter)
         {
-            _searchString = contents;
-            _filterer.SetSearchFilter(contents);
+            _searchString = nameFilter;
+            //_filterer.SetSearchFilter(nameFilter);
             UpdateContents();
             if (onFiltersChanged != null) onFiltersChanged.Invoke();
         }

@@ -155,7 +155,9 @@ namespace SatelliteStorage.UI
 			display.onFiltersChanged = () =>
 			{
 				craftDisplay._filterer = display._filterer;
-				craftDisplay.UpdateContents();
+				craftDisplay._searchString = display.searchString;
+
+                craftDisplay.UpdateContents();
 			};
 
 			display.OnLeftMouseDown += (evt, element) =>
