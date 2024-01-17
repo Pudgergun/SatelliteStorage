@@ -38,6 +38,7 @@ namespace SatelliteStorage.UI
 
         public Action<int> onRecipeChoosen;
         public EntryFilterer<Item, IItemEntryFilter> _filterer;
+        public string _searchString;
         public int selectedRecipe = -1;
         public event Action OnRequestAvailableRecipes;
 
@@ -208,6 +209,13 @@ namespace SatelliteStorage.UI
                 _itemIdsAvailableToShow.AddRange(_itemIdsAvailableTotal.Where((x) =>
                 {
                     if (!ContentSamples.ItemsByType.ContainsKey(x)) return false;
+
+                    if (_searchString != null && _searchString != "")
+                    {
+                        if (ContentSamples.ItemsByType[x].AffixName().ToLower().IndexOf(_searchString.Trim().ToLower()) < 0)
+                            return false;
+                    }
+
                     return _filterer.FitsFilter(ContentSamples.ItemsByType[x]);
                 }));
             }
@@ -217,7 +225,7 @@ namespace SatelliteStorage.UI
             }
 
             _itemIdsAvailableToShow.Sort(_sorter);
-
+            
             List<IDriveItem> recipeItems = new List<IDriveItem>();
             bool hasRecipe = false;
             foreach (int key in _availableRecipes.Keys)

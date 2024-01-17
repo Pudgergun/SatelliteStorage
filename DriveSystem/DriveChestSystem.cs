@@ -44,11 +44,11 @@ namespace SatelliteStorage.DriveSystem
 			if (Debug_fillWithRandomItems)
 			{
 				Random rnd = new Random();
-				for (int i = 0; i < 1000; i++)
+				for (int i = 0; i < 10000; i++)
 				{
                     IDriveItem itm = new DriveItem();
 					itm.SetType(i + 1).SetStack(1).SetPrefix(rnd.Next(1, 30));
-					items.Add(itm);
+                    _items.Add(itm);
 				}
 			}
 			//===========
